@@ -22,7 +22,8 @@ bool ScoutRobot::QueryRobotState(RobotState *data)
     if (cmd.IsUpdata == true)
     {
         cmd.IsUpdata = false;
-        *data = RobotState(cmd.Linear, cmd.Angular);
+        data->linear = cmd.Linear;
+        data->angular = cmd.Angular;
         scout_transport::Set_dataOfTransport(&cmd);
 
         return true;
@@ -33,6 +34,7 @@ bool ScoutRobot::QueryRobotState(RobotState *data)
 
 void ScoutRobot::SendCommand(const RobotCmd& cmd)
 {
+    std::cout << "--- cmd: " << cmd.linear << " , " << cmd.angular << std::endl;
     double cent_speed = cmd.linear;
     double cmd_twist_rotation = cmd.angular;
 

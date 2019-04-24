@@ -113,8 +113,8 @@ private:
     int32_t odom_query_freq_;
 
     std::mutex cmd_mutex_;
-    double cmd_linear_x_ = 0;
-    double cmd_angular_z_ = 0;
+    double cmd_linear_x_ = 0.0;
+    double cmd_angular_z_ = 0.5;
 
     double x = 0;
     double y = 0;
