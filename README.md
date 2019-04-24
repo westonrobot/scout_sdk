@@ -24,16 +24,20 @@ $ sudo chmod 666 /dev/ttyUSB0
 $ sudo adduser <your-user-name> input
 ```
 
-# Install Dependencies
+# Build SDK
 
-Compile tools
+Install compile tools
 ```
 $ sudo apt install build-essential cmake
 ```
 
-Dependent libraries
+Configure and build
 ```
-$ sudo apt install libboost-thread-dev
+$ cd scout_sdk 
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
 ```
 
 # Add environment Variables
@@ -49,4 +53,4 @@ export CLASSPATH=$SCOUT_HOME/build/lcmtypes_librav.jar:$CLASSPATH
 # Third-Party Components
 
 * serial: https://github.com/wjwwood/serial
-* can: ?
+* can: TODO

@@ -100,7 +100,7 @@ public:
             // std::cout << "cmd loop" << std::endl;
             cmd_mutex_.lock();
 #ifndef TEST_WITHOUT_SERIAL_HARDWARE
-            robot_.SendCommand(cmd_linear_x_, cmd_angular_z_, index++);
+            robot_.SendCommand({cmd_linear_x_, cmd_angular_z_, index++});
 #endif
             cmd_mutex_.unlock();
             swatch.sleep_until_ms(1000.0 / ctrl_freq_);

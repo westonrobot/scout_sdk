@@ -21,25 +21,14 @@ else()
 	message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 or C++11 support. Please use a different C++ compiler.")
 endif()
 
-## Optionally built modules: on/off
-set(BUILD_TESTS on)
-
-## Dependency libraries
-find_package(Boost REQUIRED system thread)
-
 ## Add libraries
 set(SCOUT_CPP_SRC 
     src/scout_robot.cpp
 )
 add_library(scoutcpp STATIC ${SCOUT_CPP_SRC})
-target_link_libraries(scoutcpp scoutio ${Boost_LIBRARIES})
+target_link_libraries(scoutcpp scoutio)
 target_include_directories(scoutcpp PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
 	$<INSTALL_INTERFACE:include>	
     PRIVATE src)
-    
-## Add executables
-if(BUILD_TESTS)
-    add_subdirectory(tests)
-endif()

@@ -1,7 +1,5 @@
-#ifndef __TRANSPORT_h__
-#define __TRANSPORT_h__
-
-#include <boost/thread/mutex.hpp>
+#ifndef TRANSPORT_H
+#define TRANSPORT_H
 
 namespace scout_transport
 {
@@ -42,4 +40,4 @@ void Find_NextHead();
 void Send_SpeedToChassis(short Angular, short Linear, unsigned char Count);
 } // namespace scout_transport
 
-#endif
+#endif /* TRANSPORT_H */

@@ -1,8 +1,7 @@
 #include <iostream>
-
-#include <boost/thread/mutex.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/thread.hpp>
+#include <thread>
+#include <mutex>
+#include <cstring>
 
 #include "scout_io/serialport.h"
 #include "scout_io/transport.h"
@@ -21,8 +20,8 @@ bool Is_send_speed_callback;
 scout_transport::Frame_t Get_Odom_Frame;
 scout_transport::Cmd_t cmd;
 
-boost::mutex ack_write;
-boost::mutex cmd_write;
+std::mutex ack_write;
+std::mutex cmd_write;
 } // namespace
 
 namespace scout_transport
@@ -180,7 +179,8 @@ void Send_SpeedToChassis(short Angular, short Linear, unsigned char Count)
     do
     {
         Send_Speed(Angular, Linear, Count);
-        boost::this_thread::sleep(boost::posix_time::milliseconds(60));
+        // boost::this_thread::sleep(boost::posix_time::milliseconds(60));
+        std::this_thread::sleep_for(std::chrono::milliseconds(60));
         time++;
         if (time > 20)
         {

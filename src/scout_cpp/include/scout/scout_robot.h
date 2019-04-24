@@ -9,10 +9,21 @@ namespace scout
 struct RobotState
 {
     RobotState() : linear(0), angular(0) {}
-    RobotState(short _linear, short _angular) : linear(linear), angular(_angular) {}
+    RobotState(short _linear, short _angular) : linear(_linear), angular(_angular) {}
 
     short linear;
     short angular;
+};
+
+struct RobotCmd
+{
+    RobotCmd() : linear(0), angular(0) {}
+    RobotCmd(double _linear, double _angular, uint32_t cnt)
+        : linear(_linear), angular(_angular), count(0) {}
+
+    double linear;
+    double angular;
+    uint32_t count;
 };
 
 class ScoutRobot
@@ -23,7 +34,7 @@ public:
 
     bool IsConnectionActive() const { return serial_connected_ | can_connected_; }
 
-    void SendCommand(double angular, double linear, uint32_t count);
+    void SendCommand(const RobotCmd& cmd);
     bool QueryRobotState(RobotState *data);
 
 private:

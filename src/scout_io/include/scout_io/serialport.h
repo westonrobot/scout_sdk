@@ -1,5 +1,5 @@
-#ifndef __SERIALPORT_h__
-#define __SERIALPORT_h__
+#ifndef SERIALPORT_H
+#define SERIALPORT_H
 
 #include <string>
 
@@ -11,4 +11,4 @@ unsigned int Read(unsigned char *data, unsigned short len);
 unsigned int GetDataCount(void);
 } // namespace scout_serial
 
-#endif
+#endif /* SERIALPORT_H */
