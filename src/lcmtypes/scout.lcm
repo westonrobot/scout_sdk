@@ -1,0 +1,18 @@
+package scout_lcm_msgs;
+
+struct ScoutState_t
+{
+    float x;
+    float y;
+    float yaw;
+
+    float linear_vel;
+    float angular_vel;
+} 
+
+struct ScoutCommand_t
+{
+    float linear;
+    float angular;
+} 
+
