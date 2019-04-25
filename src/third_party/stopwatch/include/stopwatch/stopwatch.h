@@ -9,6 +9,8 @@
 
 namespace stopwatch
 {
+// only supported on x86 processors
+#if (defined __x86_64__) || (defined __i386)
 // An implementation of the 'TrivialClock' concept using the rdtscp instruction.
 struct rdtscp_clock
 {
@@ -78,6 +80,7 @@ auto sample(Func &&function) -> std::array<typename Clock::duration, N>
     std::sort(samples.begin(), samples.end());
     return samples;
 }
+#endif /* __x86_64__ or __i386 */
 
 struct StopWatch
 {

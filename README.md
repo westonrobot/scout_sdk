@@ -3,9 +3,9 @@
 ![Structure](./docs/scout_interface.png)
 
 * Data from the chassis:
-  * Odometry
+  * Odometry (position, velocity estimation)
 * Data to the chassis:
-  * Motion command
+  * Motion command (linear/angular velocity)
 
 # Prerequisites
 
@@ -40,17 +40,7 @@ $ cmake ..
 $ make
 ```
 
-# Add environment Variables
-
-Add the following lines to your "~/.bashrc"
-```
-# Scout
-export SCOUT_HOME=$HOME/Workspace/agilex/scout_sdk
-export PYTHONPATH=$LIBRAV_HOME/src/lcmtypes/python:$SCOUT_HOME/python:$PYTHONPATH
-export CLASSPATH=$SCOUT_HOME/build/lcmtypes_librav.jar:$CLASSPATH
-```
-
 # Third-Party Components
 
-* serial: https://github.com/wjwwood/serial
-* can: TODO
+* serial - https://github.com/wjwwood/serial: serial read/write
+* stopwatch - https://github.com/rxdu/stopwatch: for timing control in demo
