@@ -12,8 +12,6 @@
 
 #include "scout/scout_robot.h"
 
-// #define TEST_WITHOUT_SERIAL_HARDWARE
-
 using namespace scout;
 
 class ScoutMessenger
@@ -30,11 +28,13 @@ public:
     {
         RobotState data;
         stopwatch::StopWatch swatch;
+
+        bool init_run = true;
+
+        /* Odometry Publish Loop */
         while (true)
         {
             swatch.tic();
-
-            // std::cout << "odometry loop" << std::endl;
 
             if (robot_.QueryRobotState(&data))
             {
@@ -42,34 +42,34 @@ public:
                 short angular = data.angular;
 
                 current_time_ = Clock::now();
-                double dt = std::chrono::duration_cast<std::chrono::milliseconds>(current_time_ - last_time_).count()/1000.0;
-                static int start_flag = 0;
+                double dt = std::chrono::duration_cast<std::chrono::milliseconds>(current_time_ - last_time_).count() / 1000.0;
 
-                //初始化
-                if (start_flag)
+                if (init_run)
                 {
                     last_time_ = current_time_;
-                    start_flag = 1;
+                    init_run = false;
                     return;
                 }
 
+                // Velocity estimation
                 double Angular = angular;
                 double Linear = linear;
                 Angular /= 10000;
                 Linear /= 10000;
 
-                vth = Angular; //旋转角速度，在角度很小的情况下。约等于（SPEED右 - SPEED左）/ 轮子间距
-                vx = Linear;   //直线X轴的速度 =  （SPEED右 - SPEED左） / 2
-                vy = 0.0;      //2轮差速车，不能左右横移
+                vth = Angular; // Angular velocity, when angle is small, approximately = （SPEED_RIGHT - SPEED_LEFT）/ WHEEL_DISTANCE
+                vx = Linear;   // Linear velocity (along x axis) =  （SPEED_RIGHT - SPEED_LEFT） / 2
+                vy = 0.0;      // No lateral motion
 
+                // Pose estimation (by integration)
                 double delta_x = (vx * std::cos(th) - vy * std::sin(th)) * dt;
                 double delta_y = (vx * std::sin(th) + vy * std::cos(th)) * dt;
                 double delta_th = vth * dt;
-
                 x += delta_x;
                 y += delta_y;
                 th += delta_th;
 
+                // Publish/print result
                 std::cout << "pose: (x,y) " << x << " , " << y << " ; yaw: " << th << std::endl;
                 std::cout << "velocity: linear " << vx << " , angular " << vth << std::endl;
 
@@ -93,16 +93,16 @@ public:
     {
         stopwatch::StopWatch swatch;
         static unsigned char index = 0;
+
+        /* Command Updating Loop */
         while (true)
         {
             swatch.tic();
 
-            // std::cout << "cmd loop" << std::endl;
             cmd_mutex_.lock();
-#ifndef TEST_WITHOUT_SERIAL_HARDWARE
             robot_.SendCommand({cmd_linear_x_, cmd_angular_z_, index++});
-#endif
             cmd_mutex_.unlock();
+
             swatch.sleep_until_ms(1000.0 / ctrl_freq_);
         }
     }
@@ -129,22 +129,19 @@ private:
 
 int main(int argc, char **argv)
 {
+    /* Connect to a scout robot */
     ScoutRobot scout;
-
-#ifndef TEST_WITHOUT_SERIAL_HARDWARE
     scout.ConnectSerialPort("/dev/ttyUSB0", 115200);
-
     if (!scout.IsConnectionActive())
     {
         std::cerr << "Failed to connect to robot" << std::endl;
         return -1;
     }
-#endif
 
+    /* Instantiate the messenger and start data distribution */
     ScoutMessenger messenger(scout);
     std::thread odom_thread(std::bind(&ScoutMessenger::PublishOdometry, &messenger));
     std::thread cmd_thread(std::bind(&ScoutMessenger::SendMotionCommand, &messenger));
-
     odom_thread.join();
     cmd_thread.join();
 

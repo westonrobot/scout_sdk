@@ -10,15 +10,7 @@ set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/devel)
 set(CMAKE_BUILD_TYPE Debug)
 
 ## Optionally built modules: ON/OFF
-set(ENABLE_LOGGING ON)
-set(BUILD_TESTS ON)
-
-if(ENABLE_LOGGING)
-	message( "-- Enable logging with spdlog -- Yes" )
-	message( "-- Default log file storage location: librav/data/log" )
-else(ENABLE_LOGGING)
-	message( "-- Enable logging with spdlog -- No" )
-endif(ENABLE_LOGGING)
+set(BUILD_TESTS OFF)
 
 ## Add source directories
 add_subdirectory(src)

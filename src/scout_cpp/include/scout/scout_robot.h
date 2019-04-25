@@ -30,16 +30,13 @@ class ScoutRobot
 {
 public:
     void ConnectSerialPort(const std::string &port_name = "/dev/ttyUSB0", int32_t baud_rate = 115200);
-    void ConnectCanBus(const std::string &port_name);
-
-    bool IsConnectionActive() const { return serial_connected_ | can_connected_; }
+    bool IsConnectionActive() const { return serial_connected_; }
 
     void SendCommand(const RobotCmd& cmd);
     bool QueryRobotState(RobotState *data);
 
 private:
     bool serial_connected_ = false;
-    bool can_connected_ = false;
 };
 } // namespace scout
 
