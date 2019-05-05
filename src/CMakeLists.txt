@@ -3,3 +3,8 @@ add_subdirectory(demo)
 add_subdirectory(scout_cpp)
 add_subdirectory(scout_io)
 add_subdirectory(third_party)
+
+## Add executables
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()

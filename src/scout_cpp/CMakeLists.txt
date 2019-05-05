@@ -32,8 +32,3 @@ target_include_directories(scoutcpp PUBLIC
     $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
 	$<INSTALL_INTERFACE:include>	
     PRIVATE src)
-
-## Add executables
-if(BUILD_TESTS)
-add_subdirectory(tests)
-endif()
