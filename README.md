@@ -1,6 +1,10 @@
 # Introduction
 
-![Structure](./docs/scout_interface.png)
+## Structure
+
+<img src="./docs/scout_interface.png" align="center" height="300" >
+
+## Data flow
 
 * Data from the chassis:
   * Odometry (position, velocity estimation)
