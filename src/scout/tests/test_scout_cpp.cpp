@@ -10,7 +10,7 @@
 
 #include "stopwatch/stopwatch.h"
 
-#include "scout/scout_robot.h"
+#include "scout/scout_base.hpp"
 
 #define TEST_WITHOUT_SERIAL_HARDWARE
 
@@ -28,7 +28,7 @@ public:
 
     void PublishOdometry()
     {
-        RobotState data;
+        ScoutState data;
         stopwatch::StopWatch swatch;
         while (true)
         {

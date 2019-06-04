@@ -12,3 +12,7 @@ target_include_directories(socketcan PUBLIC
 	$<INSTALL_INTERFACE:include>
 	PRIVATE src)
 
+# Add executables
+# if(BUILD_TESTS)
+add_subdirectory(tests)
+# endif()

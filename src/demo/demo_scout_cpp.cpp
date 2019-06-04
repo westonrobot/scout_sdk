@@ -10,14 +10,14 @@
 
 #include "stopwatch/stopwatch.h"
 
-#include "scout/scout_robot.h"
+#include "scout/scout_base.hpp"
 
 using namespace scout;
 
 class ScoutMessenger
 {
 public:
-    ScoutMessenger(ScoutRobot &robot, int32_t ctrl_freq = 10, int32_t odom_query_freq = 200)
+    ScoutMessenger(ScoutBase &robot, int32_t ctrl_freq = 10, int32_t odom_query_freq = 200)
         : robot_(robot), ctrl_freq_(ctrl_freq), odom_query_freq_(odom_query_freq){};
     ~ScoutMessenger() = default;
 
@@ -26,7 +26,7 @@ public:
 
     void PublishOdometry()
     {
-        RobotState data;
+        ScoutState data;
         stopwatch::StopWatch swatch;
 
         bool init_run = true;
@@ -108,7 +108,7 @@ public:
     }
 
 private:
-    ScoutRobot &robot_;
+    ScoutBase &robot_;
     int32_t ctrl_freq_;
     int32_t odom_query_freq_;
 
@@ -130,7 +130,7 @@ private:
 int main(int argc, char **argv)
 {
     /* Connect to a scout robot */
-    ScoutRobot scout;
+    ScoutBase scout;
     scout.ConnectSerialPort("/dev/ttyUSB0", 115200);
     if (!scout.IsConnectionActive())
     {
