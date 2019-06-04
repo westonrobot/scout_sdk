@@ -51,7 +51,6 @@ public:
     void Send_Speed(short Angular, short Linear, unsigned char Count);
     unsigned short Checksum(unsigned char *data, unsigned short len);
     void Find_NextHead();
-    void Send_SpeedToChassis(short Angular, short Linear, unsigned char Count);
 };
 
 Cmd_t Get_dataOfTransport();

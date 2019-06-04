@@ -9,7 +9,7 @@ set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 ## Add source directories
 add_subdirectory(scout_cpp)
 add_subdirectory(scout_io)
-add_subdirectory(scout_io_v2)
+# add_subdirectory(scout_io_v2)
 
 ## Add executables
 if(BUILD_TESTS)
