@@ -159,7 +159,21 @@ int main(int argc, char **argv)
     scout.SetStateUpdateCallback(std::bind(&ScoutMessenger::UpdateState, &msg, std::placeholders::_1));
     scout.SetControlUpdateFunction(std::bind(&ScoutMessenger::UpdateCommandCallback, &msg));
 
-    scout.Run();
+    // scout.Run();
+
+    const int32_t ctrl_period_ms = 10;
+    stopwatch::StopWatch main_sw;
+
+    while (true)
+    {
+        main_sw.tic();
+
+        if (main_sw.toc() * 1000 > ctrl_period_ms)
+            std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
+        else
+            main_sw.sleep_until_ms(ctrl_period_ms);
+        std::cout << "update freq: " << 1.0 / main_sw.toc() << std::endl;
+    }
 
     return 0;
 }

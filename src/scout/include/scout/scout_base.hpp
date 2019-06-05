@@ -52,7 +52,7 @@ public:
     bool IsConnectionActive() const { return serial_connected_; }
 
     void SetStateUpdateCallback(StateUpdateCallbackFunc cb) { UpdateState = cb; }
-    void SetControlUpdateFunction(ControlUpdateFunc cb) { UpdateControl = cb; }
+    void SetControlUpdateFunction(ControlUpdateFunc ctrl_func) { UpdateControl = ctrl_func; }
 
     void Run(int32_t loop_period_ms = 10);
 

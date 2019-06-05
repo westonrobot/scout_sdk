@@ -7,3 +7,6 @@
 
 add_executable(test_scout_base test_scout_base.cpp)
 target_link_libraries(test_scout_base scoutbase)
+
+add_executable(test_can_protocol test_can_protocol.cpp)
+target_link_libraries(test_can_protocol scoutbase)
