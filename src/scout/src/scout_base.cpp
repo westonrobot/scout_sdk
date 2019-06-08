@@ -13,23 +13,23 @@ void ScoutBase::ConnectSerialPort(const std::string &port_name, int32_t baud_rat
     serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
 }
 
-void ScoutBase::Run(int32_t loop_period_ms)
-{
-    stopwatch::StopWatch sw;
-    while (true)
-    {
-        ctrl_loop_stopwatch_.tic();
+// void ScoutBase::Run(int32_t loop_period_ms)
+// {
+//     stopwatch::StopWatch sw;
+//     while (true)
+//     {
+//         ctrl_loop_stopwatch_.tic();
 
-        if (UpdateControl != nullptr)
-            UpdateControl();
+//         if (UpdateControl != nullptr)
+//             UpdateControl();
 
-        if (ctrl_loop_stopwatch_.toc() * 1000 > loop_period_ms)
-            std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
-        else
-            ctrl_loop_stopwatch_.sleep_until_ms(loop_period_ms);
-        // std::cout << "update freq: " << 1.0 / ctrl_loop_stopwatch_.toc() << std::endl;
-    }
-}
+//         if (ctrl_loop_stopwatch_.toc() * 1000 > loop_period_ms)
+//             std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
+//         else
+//             ctrl_loop_stopwatch_.sleep_until_ms(loop_period_ms);
+//         // std::cout << "update freq: " << 1.0 / ctrl_loop_stopwatch_.toc() << std::endl;
+//     }
+// }
 
 bool ScoutBase::QueryRobotState(ScoutState *data)
 {

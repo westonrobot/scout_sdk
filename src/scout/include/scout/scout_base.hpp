@@ -54,7 +54,9 @@ public:
     void SetStateUpdateCallback(StateUpdateCallbackFunc cb) { UpdateState = cb; }
     void SetControlUpdateFunction(ControlUpdateFunc ctrl_func) { UpdateControl = ctrl_func; }
 
-    void Run(int32_t loop_period_ms = 10);
+    // void Run(int32_t loop_period_ms = 10);
+
+    void DisableLightControl();
 
 private:
     bool serial_connected_ = false;

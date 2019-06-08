@@ -45,7 +45,7 @@ int main(void)
 
     int natsock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
-    strcpy(ifr.ifr_name, "vcan0");
+    strcpy(ifr.ifr_name, "/dev/ttyUSB0");
     ioctl(natsock, SIOCGIFINDEX, &ifr);
 
     addr.can_family = AF_CAN;
