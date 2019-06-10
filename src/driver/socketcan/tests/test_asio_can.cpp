@@ -14,8 +14,13 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
+#define ASIO_ENABLE_OLD_SERVICES
+#define ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+
 #include "asio.hpp"
 #include <functional>
+
+#include "asio/posix/basic_stream_descriptor.hpp"
 
 void data_send(void)
 {
@@ -45,7 +50,7 @@ int main(void)
 
     int natsock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
-    strcpy(ifr.ifr_name, "/dev/ttyUSB0");
+    strcpy(ifr.ifr_name, "can1");
     ioctl(natsock, SIOCGIFINDEX, &ifr);
 
     addr.can_family = AF_CAN;
