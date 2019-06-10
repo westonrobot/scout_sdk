@@ -34,10 +34,10 @@ using std::error_code;
 
 std::atomic<size_t> ASyncCAN::conn_id_counter{0};
 
-ASyncCAN::ASyncCAN(std::string device) : tx_total_bytes(0),
-                                         rx_total_bytes(0),
-                                         last_tx_total_bytes(0),
-                                         last_rx_total_bytes(0),
+ASyncCAN::ASyncCAN(std::string device) : tx_total_frames(0),
+                                         rx_total_frames(0),
+                                         last_tx_total_frames(0),
+                                         last_rx_total_frames(0),
                                          last_iostat(steady_clock::now()),
                                          tx_in_progress(false),
                                          tx_q{},
@@ -124,13 +124,13 @@ ASyncCAN::IOStat ASyncCAN::get_iostat()
     std::lock_guard<std::recursive_mutex> lock(iostat_mutex);
     IOStat stat;
 
-    stat.tx_total_bytes = tx_total_bytes;
-    stat.rx_total_bytes = rx_total_bytes;
+    stat.tx_total_frames = tx_total_frames;
+    stat.rx_total_frames = rx_total_frames;
 
-    auto d_tx = stat.tx_total_bytes - last_tx_total_bytes;
-    auto d_rx = stat.rx_total_bytes - last_rx_total_bytes;
-    last_tx_total_bytes = stat.tx_total_bytes;
-    last_rx_total_bytes = stat.rx_total_bytes;
+    auto d_tx = stat.tx_total_frames - last_tx_total_frames;
+    auto d_rx = stat.rx_total_frames - last_rx_total_frames;
+    last_tx_total_frames = stat.tx_total_frames;
+    last_rx_total_frames = stat.rx_total_frames;
 
     auto now = steady_clock::now();
     auto dt = now - last_iostat;
@@ -144,14 +144,14 @@ ASyncCAN::IOStat ASyncCAN::get_iostat()
     return stat;
 }
 
-void ASyncCAN::iostat_tx_add(size_t bytes)
+void ASyncCAN::iostat_tx_add(size_t frame)
 {
-    tx_total_bytes += bytes;
+    tx_total_frames += frame;
 }
 
-void ASyncCAN::iostat_rx_add(size_t bytes)
+void ASyncCAN::iostat_rx_add(size_t frame)
 {
-    rx_total_bytes += bytes;
+    rx_total_frames += frame;
 }
 
 void ASyncCAN::send_frame(const can_frame &tx_frame)
@@ -174,30 +174,33 @@ void ASyncCAN::send_frame(const can_frame &tx_frame)
     // io_service.post(std::bind(&ASyncCAN::do_write, shared_from_this(), true));
 
     // TODO implement a tx buffer
+    iostat_tx_add(1);
     stream.async_write_some(asio::buffer(&tx_frame, sizeof(tx_frame)),
                             [](error_code error, size_t bytes_transferred) {
                                 std::cout << "frame sent" << std::endl;
                             });
 }
 
-void ASyncCAN::call_receive_callback(uint8_t *buf, const std::size_t bufsize, std::size_t bytes_received)
+void ASyncCAN::call_receive_callback(can_frame *rx_frame)
 {
-    assert(bufsize >= bytes_received);
-
     // keep track of statistics
-    iostat_rx_add(bytes_received);
+    iostat_rx_add(1);
 
     // call the actual parser
     if (receive_cb)
-        receive_cb(buf, bufsize, bytes_received);
+        receive_cb(rx_frame);
     else
-        default_receive_callback(buf, bufsize, bytes_received);
+        default_receive_callback(rx_frame);
 }
 
-void ASyncCAN::default_receive_callback(uint8_t *buf, const size_t bufsize, size_t bytes_received)
+void ASyncCAN::default_receive_callback(can_frame *rx_frame)
 {
     // do nothing
-    std::cerr << "no callback function set" << std::endl;
+    // std::cerr << "no callback function set" << std::endl;
+    std::cout << std::hex << rx_frame->can_id << "  ";
+    for (int i = 0; i < rx_frame->can_dlc; i++)
+        std::cout << std::hex << int(rx_frame->data[i]) << " ";
+    std::cout << std::dec << std::endl;
 }
 
 void ASyncCAN::do_read(struct can_frame &rec_frame, asio::posix::basic_stream_descriptor<> &stream)
@@ -213,11 +216,8 @@ void ASyncCAN::do_read(struct can_frame &rec_frame, asio::posix::basic_stream_de
                 sthis->close();
                 return;
             }
-            std::cout << std::hex << sthis->rcv_frame.can_id << "  ";
-            for (int i = 0; i < sthis->rcv_frame.can_dlc; i++)
-                std::cout << std::hex << int(sthis->rcv_frame.data[i]) << " ";
-            std::cout << std::dec << std::endl;
-            // sthis->call_receive_callback(sthis->rx_buf.data(), sthis->rx_buf.size(), bytes_transferred);
+
+            sthis->call_receive_callback(&sthis->rcv_frame);
             sthis->do_read(std::ref(sthis->rcv_frame), std::ref(sthis->stream));
         });
 }
@@ -268,137 +268,3 @@ void ASyncCAN::do_write(bool check_tx_state)
                 sthis->tx_in_progress = false;
         });
 }
-
-// //---------------------------------------------------------------------------------------//
-
-// int socketcanInit(SocketCANInstance *out_ins, const char *can_iface_name)
-// {
-//     const size_t iface_name_size = strlen(can_iface_name) + 1;
-//     if (iface_name_size > IFNAMSIZ)
-//     {
-//         goto fail0;
-//     }
-
-//     const int fd = socket(PF_CAN, SOCK_RAW | SOCK_NONBLOCK, CAN_RAW);
-//     if (fd < 0)
-//     {
-//         goto fail0;
-//     }
-
-//     struct ifreq ifr;
-//     memset(&ifr, 0, sizeof(ifr));
-//     memcpy(ifr.ifr_name, can_iface_name, iface_name_size);
-
-//     const int ioctl_result = ioctl(fd, SIOCGIFINDEX, &ifr);
-//     if (ioctl_result < 0)
-//     {
-//         goto fail1;
-//     }
-
-//     struct sockaddr_can addr;
-//     memset(&addr, 0, sizeof(addr));
-//     addr.can_family = AF_CAN;
-//     addr.can_ifindex = ifr.ifr_ifindex;
-
-//     const int bind_result = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-//     if (bind_result < 0)
-//     {
-//         goto fail1;
-//     }
-
-//     out_ins->fd = fd;
-//     return 0;
-
-// fail1:
-//     close(fd);
-// fail0:
-//     return -1;
-// }
-
-// int socketcanClose(SocketCANInstance *ins)
-// {
-//     const int close_result = close(ins->fd);
-//     ins->fd = -1;
-//     return close_result;
-// }
-
-// int socketcanTransmit(SocketCANInstance *ins, const CanardCANFrame *frame, int timeout_msec)
-// {
-//     struct pollfd fds;
-//     memset(&fds, 0, sizeof(fds));
-//     fds.fd = ins->fd;
-//     fds.events |= POLLOUT;
-
-//     const int poll_result = poll(&fds, 1, timeout_msec);
-//     if (poll_result < 0)
-//     {
-//         return -1;
-//     }
-//     if (poll_result == 0)
-//     {
-//         return 0;
-//     }
-//     if ((fds.revents & POLLOUT) == 0)
-//     {
-//         return -1;
-//     }
-
-//     struct can_frame transmit_frame;
-//     memset(&transmit_frame, 0, sizeof(transmit_frame));
-//     transmit_frame.can_id = frame->id; // TODO: Map flags properly
-//     transmit_frame.can_dlc = frame->data_len;
-//     memcpy(transmit_frame.data, frame->data, frame->data_len);
-
-//     const ssize_t nbytes = write(ins->fd, &transmit_frame, sizeof(transmit_frame));
-//     if (nbytes < 0 || (size_t)nbytes != sizeof(transmit_frame))
-//     {
-//         return -1;
-//     }
-
-//     return 1;
-// }
-
-// int socketcanReceive(SocketCANInstance *ins, CanardCANFrame *out_frame, int timeout_msec)
-// {
-//     struct pollfd fds;
-//     memset(&fds, 0, sizeof(fds));
-//     fds.fd = ins->fd;
-//     fds.events |= POLLIN;
-
-//     const int poll_result = poll(&fds, 1, timeout_msec);
-//     if (poll_result < 0)
-//     {
-//         return -1;
-//     }
-//     if (poll_result == 0)
-//     {
-//         return 0;
-//     }
-//     if ((fds.revents & POLLIN) == 0)
-//     {
-//         return -1;
-//     }
-
-//     struct can_frame receive_frame;
-//     const ssize_t nbytes = read(ins->fd, &receive_frame, sizeof(receive_frame));
-//     if (nbytes < 0 || (size_t)nbytes != sizeof(receive_frame))
-//     {
-//         return -1;
-//     }
-
-//     if (receive_frame.can_dlc > CAN_MAX_DLEN) // Appeasing Coverity Scan
-//     {
-//         return -1;
-//     }
-
-//     out_frame->id = receive_frame.can_id; // TODO: Map flags properly
-//     out_frame->data_len = receive_frame.can_dlc;
-//     memcpy(out_frame->data, &receive_frame.data, receive_frame.can_dlc);
-
-//     return 1;
-// }
-
-// int socketcanGetSocketFileDescriptor(const SocketCANInstance *ins)
-// {
-//     return ins->fd;
-// }

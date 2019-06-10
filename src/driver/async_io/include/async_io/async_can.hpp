@@ -52,7 +52,7 @@ public:
     static constexpr auto DEFAULT_DEVICE = "can1";
     static constexpr std::size_t MAX_TXQ_SIZE = 1000;
 
-    using ReceiveCallback = std::function<void(uint8_t *buf, const size_t bufsize, size_t bytes_received)>;
+    using ReceiveCallback = std::function<void(can_frame* rx_frame)>;
     using ClosedCallback = std::function<void(void)>;
 
     using Ptr = std::shared_ptr<ASyncCAN>;
@@ -61,10 +61,10 @@ public:
 
     struct IOStat
     {
-        std::size_t tx_total_bytes; //!< total bytes transferred
-        std::size_t rx_total_bytes; //!< total bytes received
-        float tx_speed;             //!< current transfer speed [B/s]
-        float rx_speed;             //!< current receive speed [B/s]
+        std::size_t tx_total_frames; //!< total bytes transferred
+        std::size_t rx_total_frames; //!< total bytes received
+        float tx_speed;             //!< current transfer speed [F/s]
+        float rx_speed;             //!< current receive speed [F/s]
     };
 
 public:
@@ -98,10 +98,10 @@ private:
     struct can_frame rcv_frame;
 
     // port statistics
-    std::atomic<std::size_t> tx_total_bytes;
-    std::atomic<std::size_t> rx_total_bytes;
-    std::size_t last_tx_total_bytes;
-    std::size_t last_rx_total_bytes;
+    std::atomic<std::size_t> tx_total_frames;
+    std::atomic<std::size_t> rx_total_frames;
+    std::size_t last_tx_total_frames;
+    std::size_t last_rx_total_frames;
     std::chrono::time_point<steady_clock> last_iostat;
     std::recursive_mutex iostat_mutex;
 
@@ -123,8 +123,8 @@ private:
     void do_read(struct can_frame &rec_frame, asio::posix::basic_stream_descriptor<> &stream);
     void do_write(bool check_tx_state);
 
-    void call_receive_callback(uint8_t *buf, const std::size_t bufsize, std::size_t bytes_received);
-    void default_receive_callback(uint8_t *buf, const std::size_t bufsize, std::size_t bytes_received);
+    void call_receive_callback(can_frame* rx_frame);
+    void default_receive_callback(can_frame* rx_frame);
 
     void iostat_tx_add(std::size_t bytes);
     void iostat_rx_add(std::size_t bytes);
