@@ -58,6 +58,9 @@ public:
 
     void DisableLightControl();
 
+    void SendMotionCommand();
+    void SendLightCommand();
+
 private:
     bool serial_connected_ = false;
 

@@ -34,6 +34,7 @@
 #include <mutex>
 #include <deque>
 #include <functional>
+#include <iostream>
 
 #include "asio.hpp"
 #include "asio/posix/basic_stream_descriptor.hpp"
@@ -52,7 +53,7 @@ public:
     static constexpr auto DEFAULT_DEVICE = "can1";
     static constexpr std::size_t MAX_TXQ_SIZE = 1000;
 
-    using ReceiveCallback = std::function<void(can_frame* rx_frame)>;
+    using ReceiveCallback = std::function<void(can_frame *rx_frame)>;
     using ClosedCallback = std::function<void(void)>;
 
     using Ptr = std::shared_ptr<ASyncCAN>;
@@ -61,10 +62,10 @@ public:
 
     struct IOStat
     {
-        std::size_t tx_total_frames; //!< total bytes transferred
-        std::size_t rx_total_frames; //!< total bytes received
-        float tx_speed;             //!< current transfer speed [F/s]
-        float rx_speed;             //!< current receive speed [F/s]
+        std::size_t tx_total_frames; // total bytes transferred
+        std::size_t rx_total_frames; // total bytes received
+        float tx_speed;              // current transfer speed [Frames/s]
+        float rx_speed;              // current receive speed [Frames/s]
     };
 
 public:
@@ -123,8 +124,8 @@ private:
     void do_read(struct can_frame &rec_frame, asio::posix::basic_stream_descriptor<> &stream);
     void do_write(bool check_tx_state);
 
-    void call_receive_callback(can_frame* rx_frame);
-    void default_receive_callback(can_frame* rx_frame);
+    void call_receive_callback(can_frame *rx_frame);
+    void default_receive_callback(can_frame *rx_frame);
 
     void iostat_tx_add(std::size_t bytes);
     void iostat_rx_add(std::size_t bytes);
