@@ -33,7 +33,7 @@
 #include <linux/serial.h>
 #endif
 
-using namespace librav;
+using namespace wescore;
 
 using asio::buffer;
 using asio::io_service;
