@@ -7,5 +7,5 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 ## Add sub source directories
-add_subdirectory(async_serial)
+add_subdirectory(async_io)
 add_subdirectory(socketcan)

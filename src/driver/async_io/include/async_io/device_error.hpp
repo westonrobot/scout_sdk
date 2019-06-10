@@ -19,7 +19,7 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace librav
+namespace wescore
 {
 class DeviceError : public std::runtime_error
 {

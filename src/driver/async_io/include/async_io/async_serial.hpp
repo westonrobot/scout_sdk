@@ -1,19 +1,23 @@
 /* 
- * async_can.hpp
+ * async_serial.hpp
  * 
- * Created on: Jun 10, 2019 02:16
- * Description: code based on uavcan and libmavconn
+ * Created on: Nov 23, 2018 22:18
+ * Description: asynchronous serial communication using asio
+ *              adapted from code in libmavconn
  * 
- * Copyright (c) 2019 Ruixiang Du (rdu)
- */ 
-
-/*
- * Copyright (c) 2016 UAVCAN Team
- *
- * Distributed under the MIT License, available in the file LICENSE.
- *
+ * Main changes: 1. Removed dependency on Boost (asio standalone
+ *                  and C++ STL only)
+ *               2. Removed dependency on console-bridge
+ *               3. Removed mavlink related code
+ *               4. Removed UDP/TCP related code
+ * 
+ * Author: Vladimir Ermakov <vooon341@gmail.com>
+ *         Ruixiang Du <ruixiang.du@gmail.com>
+ * 
+ * Additioanl reference:
+ *  [1] http://www.webalice.it/fede.tft/serial_port/serial_port.html
+ * 
  */
-
 /*
  * libmavconn
  * Copyright 2013,2014,2015,2016 Vladimir Ermakov, All rights reserved.
@@ -23,8 +27,8 @@
  * https://github.com/mavlink/mavros/tree/master/LICENSE.md
  */
 
-#ifndef ASYNC_CAN_HPP
-#define ASYNC_CAN_HPP
+#ifndef ASYNC_SERIAL_HPP
+#define ASYNC_SERIAL_HPP
 
 #include <atomic>
 #include <chrono>
@@ -35,23 +39,27 @@
 
 #include "asio.hpp"
 
+#include "async_io/device_error.hpp"
+#include "async_io/msg_buffer.hpp"
+
 namespace wescore
 {
 using steady_clock = std::chrono::steady_clock;
 using lock_guard = std::lock_guard<std::recursive_mutex>;
 
-class ASyncCAN : public std::enable_shared_from_this<ASyncCAN>
+class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
 {
   public:
-    static constexpr auto DEFAULT_DEVICE = "can1";
+    static constexpr auto DEFAULT_DEVICE = "/dev/ttyUSB0";
+    static constexpr auto DEFAULT_BAUDRATE = 115200;
     static constexpr std::size_t MAX_TXQ_SIZE = 1000;
 
     using ReceiveCallback = std::function<void(uint8_t *buf, const size_t bufsize, size_t bytes_received)>;
     using ClosedCallback = std::function<void(void)>;
 
-    using Ptr = std::shared_ptr<ASyncCAN>;
-    using ConstPtr = std::shared_ptr<ASyncCAN const>;
-    using WeakPtr = std::weak_ptr<ASyncCAN>;
+    using Ptr = std::shared_ptr<ASyncSerial>;
+    using ConstPtr = std::shared_ptr<ASyncSerial const>;
+    using WeakPtr = std::weak_ptr<ASyncSerial>;
 
     struct IOStat
     {
@@ -62,17 +70,17 @@ class ASyncCAN : public std::enable_shared_from_this<ASyncCAN>
     };
 
   public:
-    ASyncCAN(std::string device = DEFAULT_DEVICE);
-    ~ASyncCAN();
+    ASyncSerial(std::string device = DEFAULT_DEVICE, unsigned baudrate = DEFAULT_BAUDRATE, bool hwflow = false);
+    ~ASyncSerial();
 
     // do not allow copy
-    ASyncCAN(const ASyncCAN &other) = delete;
-    ASyncCAN &operator=(const ASyncCAN &other) = delete;
+    ASyncSerial(const ASyncSerial &other) = delete;
+    ASyncSerial &operator=(const ASyncSerial &other) = delete;
 
     std::size_t conn_id;
 
     static Ptr open_url(std::string url);
-    void open(std::string device);
+    void open(std::string device, unsigned baudrate, bool hwflow);
     void close();
 
     void send_bytes(const uint8_t *bytes, size_t length);
@@ -84,7 +92,6 @@ class ASyncCAN : public std::enable_shared_from_this<ASyncCAN>
 
   private:
     // monotonic counter (increment only)
-    bool can_interface_opened_ = false;
     static std::atomic<std::size_t> conn_id_counter;
 
     // port statistics
@@ -121,4 +128,4 @@ class ASyncCAN : public std::enable_shared_from_this<ASyncCAN>
 };
 } // namespace wescore
 
-#endif /* ASYNC_CAN_HPP */
+#endif /* ASYNC_SERIAL_HPP */

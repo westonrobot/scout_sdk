@@ -26,8 +26,8 @@
 #include <cassert>
 #include <iostream>
 
-#include "async_serial/async_serial.hpp"
-#include "async_serial/aserial_utils.hpp"
+#include "async_io/async_serial.hpp"
+#include "asyncio_utils.hpp"
 
 #if defined(__linux__)
 #include <linux/serial.h>

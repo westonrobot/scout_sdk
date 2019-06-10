@@ -19,7 +19,7 @@
 #include <cstring>
 #include <cassert>
 
-namespace librav
+namespace wescore
 {
 
 /**
@@ -66,4 +66,4 @@ struct MsgBuffer
         return len - pos;
     }
 };
-} // namespace librav
+} // namespace wescore

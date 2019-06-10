@@ -12,14 +12,14 @@
  * https://github.com/mavlink/mavros/tree/master/LICENSE.md
  */
 
-#ifndef ASERIAL_UTILS_HPP
-#define ASERIAL_UTILS_HPP
+#ifndef ASYNCIO_UTILS_HPP
+#define ASYNCIO_UTILS_HPP
 
 #include <string>
 #include <algorithm>
 #include <iostream>
 
-namespace librav
+namespace wescore
 {
 template <typename... Args>
 std::string format(const std::string &fmt, Args... args)
@@ -118,6 +118,6 @@ void url_parse_query(std::string query)
     sys.assign(ids_it, comma_it);
     comp.assign(comma_it + 1, query.end());
 }
-} // namespace librav
+} // namespace wescore
 
-#endif /* ASERIAL_UTILS_HPP */
+#endif /* ASYNCIO_UTILS_HPP */

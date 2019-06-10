@@ -1,15 +1,7 @@
-/*
- * test_interface.cpp
- *
- *  Created on: Dec 25, 2016
- *      Author: rdu
- */
-
 #include <iostream>
+#include "async_io/async_can.hpp"
 
-#include "async_serial/async_serial.hpp"
-
-using namespace librav;
+using namespace wescore;
 
 void parse_buffer(uint8_t *buf, const size_t bufsize, size_t bytes_received)
 {
@@ -46,19 +38,18 @@ void parse_buffer(uint8_t *buf, const size_t bufsize, size_t bytes_received)
 
 int main(int argc, char *argv[])
 {
-    // ASyncSerial::Ptr serial = ASyncSerial::open_url("/dev/ttyUSB0:115200");
-    std::shared_ptr<ASyncSerial> serial = std::make_shared<ASyncSerial>("/dev/pts/6", 115200);
+    std::shared_ptr<ASyncCAN> serial = std::make_shared<ASyncCAN>("can1");
 
-    serial->set_receive_callback(parse_buffer);
+    // serial->set_receive_callback(parse_buffer);
 
-    if (serial->is_open())
-        std::cout << "serial port opened" << std::endl;
+    // if (serial->is_open())
+    //     std::cout << "serial port opened" << std::endl;
 
     uint8_t data[8] = {'a','b','c'};
 
     while (1)
     {
-        serial->send_bytes(data, 3);
+        // serial->send_bytes(data, 3);
         sleep(1);
     }
 }

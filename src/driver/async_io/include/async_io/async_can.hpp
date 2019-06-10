@@ -1,23 +1,19 @@
 /* 
- * async_serial.hpp
+ * async_can.hpp
  * 
- * Created on: Nov 23, 2018 22:18
- * Description: asynchronous serial communication using asio
- *              adapted from code in libmavconn
+ * Created on: Jun 10, 2019 02:16
+ * Description: code based on uavcan and libmavconn
  * 
- * Main changes: 1. Removed dependency on Boost (asio standalone
- *                  and C++ STL only)
- *               2. Removed dependency on console-bridge
- *               3. Removed mavlink related code
- *               4. Removed UDP/TCP related code
- * 
- * Author: Vladimir Ermakov <vooon341@gmail.com>
- *         Ruixiang Du <ruixiang.du@gmail.com>
- * 
- * Additioanl reference:
- *  [1] http://www.webalice.it/fede.tft/serial_port/serial_port.html
- * 
+ * Copyright (c) 2019 Ruixiang Du (rdu)
  */
+
+/*
+ * Copyright (c) 2016 UAVCAN Team
+ *
+ * Distributed under the MIT License, available in the file LICENSE.
+ *
+ */
+
 /*
  * libmavconn
  * Copyright 2013,2014,2015,2016 Vladimir Ermakov, All rights reserved.
@@ -27,8 +23,10 @@
  * https://github.com/mavlink/mavros/tree/master/LICENSE.md
  */
 
-#ifndef ASYNC_SERIAL_HPP
-#define ASYNC_SERIAL_HPP
+#ifndef ASYNC_CAN_HPP
+#define ASYNC_CAN_HPP
+
+#include <linux/can.h>
 
 #include <atomic>
 #include <chrono>
@@ -38,28 +36,28 @@
 #include <functional>
 
 #include "asio.hpp"
+#include "asio/posix/basic_stream_descriptor.hpp"
 
-#include "async_serial/device_error.hpp"
-#include "async_serial/msg_buffer.hpp"
+#include "async_io/device_error.hpp"
+#include "async_io/msg_buffer.hpp"
 
 namespace wescore
 {
 using steady_clock = std::chrono::steady_clock;
 using lock_guard = std::lock_guard<std::recursive_mutex>;
 
-class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
+class ASyncCAN : public std::enable_shared_from_this<ASyncCAN>
 {
-  public:
-    static constexpr auto DEFAULT_DEVICE = "/dev/ttyUSB0";
-    static constexpr auto DEFAULT_BAUDRATE = 115200;
+public:
+    static constexpr auto DEFAULT_DEVICE = "can1";
     static constexpr std::size_t MAX_TXQ_SIZE = 1000;
 
     using ReceiveCallback = std::function<void(uint8_t *buf, const size_t bufsize, size_t bytes_received)>;
     using ClosedCallback = std::function<void(void)>;
 
-    using Ptr = std::shared_ptr<ASyncSerial>;
-    using ConstPtr = std::shared_ptr<ASyncSerial const>;
-    using WeakPtr = std::weak_ptr<ASyncSerial>;
+    using Ptr = std::shared_ptr<ASyncCAN>;
+    using ConstPtr = std::shared_ptr<ASyncCAN const>;
+    using WeakPtr = std::weak_ptr<ASyncCAN>;
 
     struct IOStat
     {
@@ -69,30 +67,34 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
         float rx_speed;             //!< current receive speed [B/s]
     };
 
-  public:
-    ASyncSerial(std::string device = DEFAULT_DEVICE, unsigned baudrate = DEFAULT_BAUDRATE, bool hwflow = false);
-    ~ASyncSerial();
+public:
+    ASyncCAN(std::string device = DEFAULT_DEVICE);
+    ~ASyncCAN();
 
     // do not allow copy
-    ASyncSerial(const ASyncSerial &other) = delete;
-    ASyncSerial &operator=(const ASyncSerial &other) = delete;
+    ASyncCAN(const ASyncCAN &other) = delete;
+    ASyncCAN &operator=(const ASyncCAN &other) = delete;
 
     std::size_t conn_id;
+    int can_fd_;
 
     static Ptr open_url(std::string url);
-    void open(std::string device, unsigned baudrate, bool hwflow);
+    void open(std::string device);
     void close();
 
     void send_bytes(const uint8_t *bytes, size_t length);
     void set_receive_callback(ReceiveCallback cb) { receive_cb = cb; }
     void set_closed_callback(ClosedCallback cb) { port_closed_cb = cb; }
 
-    inline bool is_open() { return serial_dev.is_open(); }
+    inline bool is_open() { return true; }
     IOStat get_iostat();
 
-  private:
+private:
     // monotonic counter (increment only)
+    bool can_interface_opened_ = false;
     static std::atomic<std::size_t> conn_id_counter;
+
+    struct can_frame rcv_frame;
 
     // port statistics
     std::atomic<std::size_t> tx_total_bytes;
@@ -104,8 +106,8 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
 
     // io service
     asio::io_service io_service;
+    asio::posix::basic_stream_descriptor<> stream;
     std::thread io_thread;
-    asio::serial_port serial_dev;
 
     std::atomic<bool> tx_in_progress;
     std::deque<MsgBuffer> tx_q;
@@ -117,7 +119,7 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
     ReceiveCallback receive_cb;
 
     // internal processing
-    void do_read();
+    void do_read(struct can_frame &rec_frame, asio::posix::basic_stream_descriptor<> &stream);
     void do_write(bool check_tx_state);
 
     void call_receive_callback(uint8_t *buf, const std::size_t bufsize, std::size_t bytes_received);
@@ -128,4 +130,4 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
 };
 } // namespace wescore
 
-#endif /* ASYNC_SERIAL_HPP */
+#endif /* ASYNC_CAN_HPP */
