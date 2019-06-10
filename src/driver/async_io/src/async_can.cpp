@@ -84,11 +84,14 @@ void ASyncCAN::open(std::string device)
 
     can_interface_opened_ = true;
 
+    std::cout << "can opened" << std::endl;
+
     ///////////////////////////////////////////////////////////////
 
     // NOTE: shared_from_this() should not be used in constructors
 
     // give some work to io_service before start
+    stream.assign(can_fd_);
     io_service.post(std::bind(&ASyncCAN::do_read, this, std::ref(rcv_frame), std::ref(stream)));
 
     // run io_service for async io
