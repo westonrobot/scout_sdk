@@ -82,7 +82,8 @@ public:
     void open(std::string device);
     void close();
 
-    void send_bytes(const uint8_t *bytes, size_t length);
+    void send_frame(const can_frame &tx_frame);
+
     void set_receive_callback(ReceiveCallback cb) { receive_cb = cb; }
     void set_closed_callback(ClosedCallback cb) { port_closed_cb = cb; }
 

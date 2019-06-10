@@ -112,7 +112,7 @@ void ASyncCAN::close()
         io_thread.join();
 
     io_service.reset();
-    
+
     can_interface_opened_ = false;
 
     if (port_closed_cb)
@@ -154,24 +154,30 @@ void ASyncCAN::iostat_rx_add(size_t bytes)
     rx_total_bytes += bytes;
 }
 
-void ASyncCAN::send_bytes(const uint8_t *bytes, size_t length)
+void ASyncCAN::send_frame(const can_frame &tx_frame)
 {
-    if (!is_open())
-    {
-        std::cerr << "send: channel closed!"
-                  << " connection id: " << conn_id << std::endl;
-        return;
-    }
+    // if (!is_open())
+    // {
+    //     std::cerr << "send: channel closed!"
+    //               << " connection id: " << conn_id << std::endl;
+    //     return;
+    // }
 
-    {
-        lock_guard lock(mutex);
+    // {
+    //     lock_guard lock(mutex);
 
-        if (tx_q.size() >= MAX_TXQ_SIZE)
-            throw std::length_error("ASyncCAN::send_bytes: TX queue overflow");
+    //     if (tx_q.size() >= MAX_TXQ_SIZE)
+    //         throw std::length_error("ASyncCAN::send_bytes: TX queue overflow");
 
-        tx_q.emplace_back(bytes, length);
-    }
-    io_service.post(std::bind(&ASyncCAN::do_write, shared_from_this(), true));
+    //     tx_q.emplace_back(bytes, length);
+    // }
+    // io_service.post(std::bind(&ASyncCAN::do_write, shared_from_this(), true));
+
+    // TODO implement a tx buffer
+    stream.async_write_some(asio::buffer(&tx_frame, sizeof(tx_frame)),
+                            [](error_code error, size_t bytes_transferred) {
+                                std::cout << "frame sent" << std::endl;
+                            });
 }
 
 void ASyncCAN::call_receive_callback(uint8_t *buf, const std::size_t bufsize, std::size_t bytes_received)
@@ -228,39 +234,39 @@ void ASyncCAN::do_write(bool check_tx_state)
     tx_in_progress = true;
     auto sthis = shared_from_this();
     auto &buf_ref = tx_q.front();
-    // serial_dev.async_write_some(
-    //     buffer(buf_ref.dpos(), buf_ref.nbytes()),
-    //     [sthis, &buf_ref](error_code error, size_t bytes_transferred) {
-    //         assert(bytes_transferred <= buf_ref.len);
+    stream.async_write_some(
+        buffer(buf_ref.dpos(), buf_ref.nbytes()),
+        [sthis, &buf_ref](error_code error, size_t bytes_transferred) {
+            assert(bytes_transferred <= buf_ref.len);
 
-    //         if (error)
-    //         {
-    //             std::cerr << "write error in connection " << sthis->conn_id << " : "
-    //                       << error.message().c_str() << std::endl;
-    //             sthis->close();
-    //             return;
-    //         }
+            if (error)
+            {
+                std::cerr << "write error in connection " << sthis->conn_id << " : "
+                          << error.message().c_str() << std::endl;
+                sthis->close();
+                return;
+            }
 
-    //         sthis->iostat_tx_add(bytes_transferred);
-    //         lock_guard lock(sthis->mutex);
+            sthis->iostat_tx_add(bytes_transferred);
+            lock_guard lock(sthis->mutex);
 
-    //         if (sthis->tx_q.empty())
-    //         {
-    //             sthis->tx_in_progress = false;
-    //             return;
-    //         }
+            if (sthis->tx_q.empty())
+            {
+                sthis->tx_in_progress = false;
+                return;
+            }
 
-    //         buf_ref.pos += bytes_transferred;
-    //         if (buf_ref.nbytes() == 0)
-    //         {
-    //             sthis->tx_q.pop_front();
-    //         }
+            buf_ref.pos += bytes_transferred;
+            if (buf_ref.nbytes() == 0)
+            {
+                sthis->tx_q.pop_front();
+            }
 
-    //         if (!sthis->tx_q.empty())
-    //             sthis->do_write(false);
-    //         else
-    //             sthis->tx_in_progress = false;
-    //     });
+            if (!sthis->tx_q.empty())
+                sthis->do_write(false);
+            else
+                sthis->tx_in_progress = false;
+        });
 }
 
 // //---------------------------------------------------------------------------------------//
