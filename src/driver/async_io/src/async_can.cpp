@@ -84,10 +84,6 @@ void ASyncCAN::open(std::string device)
 
     can_interface_opened_ = true;
 
-    std::cout << "can opened" << std::endl;
-
-    ///////////////////////////////////////////////////////////////
-
     // NOTE: shared_from_this() should not be used in constructors
 
     // give some work to io_service before start
@@ -96,7 +92,7 @@ void ASyncCAN::open(std::string device)
 
     // run io_service for async io
     io_thread = std::thread([this]() {
-        set_this_thread_name("mserial%zu", conn_id);
+        set_this_thread_name("mcan%zu", conn_id);
         io_service.run();
     });
 }
@@ -107,18 +103,16 @@ void ASyncCAN::close()
     // if (!is_open())
     //     return;
 
-    // serial_dev.cancel();
-    // serial_dev.close();
-
-    // io_service.stop();
-
-    // if (io_thread.joinable())
-    //     io_thread.join();
-
-    // io_service.reset();
     const int close_result = ::close(can_fd_);
     can_fd_ = -1;
 
+    io_service.stop();
+
+    if (io_thread.joinable())
+        io_thread.join();
+
+    io_service.reset();
+    
     can_interface_opened_ = false;
 
     if (port_closed_cb)
