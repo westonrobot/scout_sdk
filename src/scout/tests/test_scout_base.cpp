@@ -78,6 +78,8 @@ int main(int argc, char **argv)
 
     while (true)
     {
+        scout.SetMotionCommand(0.15, 0);
+        sleep(1);
     }
 
     return 0;

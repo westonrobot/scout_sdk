@@ -116,13 +116,13 @@ struct ScoutMotionCmd
         MOTOR_OVERCURRENT = 0x08
     };
 
-    ScoutMotionCmd(double linear = 0, double angular = 0,
+    ScoutMotionCmd(int8_t linear = 0, int8_t angular = 0,
                    FaultClearFlag fault_clr_flag = FaultClearFlag::NO_FAULT)
         : linear_velocity(linear), angular_velocity(angular),
           fault_clear_flag(fault_clr_flag) {}
 
-    double linear_velocity;
-    double angular_velocity;
+    int8_t linear_velocity;
+    int8_t angular_velocity;
     FaultClearFlag fault_clear_flag;
 
     static constexpr double max_linear_velocity = 1.5;      // 1.5m/s

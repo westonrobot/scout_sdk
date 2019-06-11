@@ -44,21 +44,10 @@ void ScoutBase::ControlLoop(int32_t period_ms)
 
         motion_cmd_mutex_.lock();
         msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
-        double linear_vel = current_motion_cmd_.linear_velocity;
-        double angular_vel = current_motion_cmd_.angular_velocity;
+        msg.data.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
+        msg.data.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
         motion_cmd_mutex_.unlock();
 
-        if (linear_vel < ScoutMotionCmd::min_linear_velocity)
-            linear_vel = ScoutMotionCmd::min_linear_velocity;
-        if (linear_vel > ScoutMotionCmd::max_linear_velocity)
-            linear_vel = ScoutMotionCmd::max_linear_velocity;
-        if (angular_vel < ScoutMotionCmd::min_angular_velocity)
-            angular_vel = ScoutMotionCmd::min_angular_velocity;
-        if (angular_vel > ScoutMotionCmd::max_angular_velocity)
-            angular_vel = ScoutMotionCmd::max_angular_velocity;
-
-        msg.data.cmd.linear_velocity_cmd = static_cast<uint8_t>(linear_vel / ScoutMotionCmd::max_linear_velocity * 100.0);
-        msg.data.cmd.angular_velocity_cmd = static_cast<uint8_t>(angular_vel / ScoutMotionCmd::max_angular_velocity * 100.0);
         msg.data.cmd.reserved0 = 0;
         msg.data.cmd.reserved1 = 0;
         msg.data.cmd.count = cmd_count++;
@@ -82,9 +71,19 @@ void ScoutBase::ControlLoop(int32_t period_ms)
 
 void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMotionCmd::FaultClearFlag fault_clr_flag)
 {
+    if (linear_vel < ScoutMotionCmd::min_linear_velocity)
+        linear_vel = ScoutMotionCmd::min_linear_velocity;
+    if (linear_vel > ScoutMotionCmd::max_linear_velocity)
+        linear_vel = ScoutMotionCmd::max_linear_velocity;
+    if (angular_vel < ScoutMotionCmd::min_angular_velocity)
+        angular_vel = ScoutMotionCmd::min_angular_velocity;
+    if (angular_vel > ScoutMotionCmd::max_angular_velocity)
+        angular_vel = ScoutMotionCmd::max_angular_velocity;
+
     std::lock_guard<std::mutex> guard(motion_cmd_mutex_);
-    current_motion_cmd_.linear_velocity = linear_vel;
-    current_motion_cmd_.angular_velocity = angular_vel;
+    current_motion_cmd_.linear_velocity = static_cast<uint8_t>(linear_vel / ScoutMotionCmd::max_linear_velocity * 100.0);
+    current_motion_cmd_.angular_velocity = static_cast<uint8_t>(angular_vel / ScoutMotionCmd::max_angular_velocity * 100.0);
+    std::cout << "linear velocity: " << static_cast<int>(current_motion_cmd_.linear_velocity) << " , " << static_cast<int>(current_motion_cmd_.angular_velocity) << std::endl;
     current_motion_cmd_.fault_clear_flag = fault_clr_flag;
 }
 
