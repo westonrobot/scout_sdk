@@ -101,8 +101,8 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
         std::cout << "motion control feedback received" << std::endl;
         MotionStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.linear_velocity = msg.data.status.linear_velocity.value / 1000.0;
-        scout_state_.angular_velocity = msg.data.status.angular_velocity.value / 1000.0;
+        scout_state_.linear_velocity = (static_cast<uint16_t>(msg.data.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.linear_velocity.high_byte) << 8) / 1000.0;
+        scout_state_.angular_velocity = (static_cast<uint16_t>(msg.data.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.angular_velocity.high_byte) << 8)/ 1000.0;
         break;
     }
     case MSG_LIGHT_CONTROL_FEEDBACK_ID:
@@ -127,8 +127,11 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         scout_state_.control_mode = msg.data.status.control_mode;
         scout_state_.base_state = msg.data.status.base_state;
-        scout_state_.battery_voltage = msg.data.status.battery_voltage.value / 10.0;
-        scout_state_.fault_code = msg.data.status.fault_code.value;
+        scout_state_.battery_voltage = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8) / 10.0;
+        scout_state_.fault_code = (static_cast<uint16_t>(msg.data.status.fault_code.low_byte) | static_cast<uint16_t>(msg.data.status.fault_code.high_byte) << 8);
+        // uint16_t battery_value = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8);
+        // std::cout << "battery: " << std::hex << static_cast<int>(msg.data.status.battery_voltage.high_byte) << " , "
+        //         << static_cast<int>(msg.data.status.battery_voltage.low_byte) << " => " << battery_value << " = " << scout_state_.battery_voltage << std::endl;
         break;
     }
     case MSG_MOTOR1_DRIVER_FEEDBACK_ID:
@@ -136,8 +139,8 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
         std::cout << "motor 1 driver feedback received" << std::endl;
         Motor1DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[0].current = msg.data.status.current.value / 10.0;
-        scout_state_.motor_states[0].rpm = msg.data.status.rpm.value;
+        scout_state_.motor_states[0].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        scout_state_.motor_states[0].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
         scout_state_.motor_states[0].temperature = msg.data.status.temperature;
         break;
     }
@@ -146,8 +149,8 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
         std::cout << "motor 2 driver feedback received" << std::endl;
         Motor2DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[1].current = msg.data.status.current.value / 10.0;
-        scout_state_.motor_states[1].rpm = msg.data.status.rpm.value;
+        scout_state_.motor_states[1].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        scout_state_.motor_states[1].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
         scout_state_.motor_states[1].temperature = msg.data.status.temperature;
         break;
     }
@@ -156,8 +159,8 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
         std::cout << "motor 3 driver feedback received" << std::endl;
         Motor3DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[2].current = msg.data.status.current.value / 10.0;
-        scout_state_.motor_states[2].rpm = msg.data.status.rpm.value;
+        scout_state_.motor_states[2].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        scout_state_.motor_states[2].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
         scout_state_.motor_states[2].temperature = msg.data.status.temperature;
         break;
     }
@@ -166,13 +169,17 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
         std::cout << "motor 4 driver feedback received" << std::endl;
         Motor4DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[3].current = msg.data.status.current.value / 10.0;
-        scout_state_.motor_states[3].rpm = msg.data.status.rpm.value;
+        scout_state_.motor_states[3].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        scout_state_.motor_states[3].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
         scout_state_.motor_states[3].temperature = msg.data.status.temperature;
         break;
     }
     }
 
-    std::cout << scout_state_ << std::endl;
+    std::cout << "-------------------------------" << std::endl;
+    std::cout << "control mode: " << static_cast<int>(scout_state_.control_mode) << " , base state: " << static_cast<int>(scout_state_.base_state) << std::endl;
+    std::cout << "battery voltage: " << scout_state_.battery_voltage << std::endl;
+    std::cout << "velocity (linear, angular): " << scout_state_.linear_velocity << ", " << scout_state_.angular_velocity << std::endl;
+    std::cout << "-------------------------------" << std::endl;
 }
 } // namespace wescore

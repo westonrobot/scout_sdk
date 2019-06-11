@@ -27,42 +27,34 @@ struct ScoutState
 
     struct MotorState
     {
-        double current; // in A
-        double rpm;
-        double temperature;
+        double current = 0; // in A
+        double rpm = 0;
+        double temperature = 0;
     };
 
     struct LightState
     {
-        uint8_t mode;
-        uint8_t custom_value;
+        uint8_t mode = 0;
+        uint8_t custom_value = 0;
     };
 
     // base state
-    uint8_t base_state;
-    uint8_t control_mode;
-    uint16_t fault_code;
-    double battery_voltage;
+    uint8_t base_state = 0;
+    uint8_t control_mode = 0;
+    uint16_t fault_code = 0;
+    double battery_voltage = 0.0;
 
     // motor state
     MotorState motor_states[4];
 
     // light state
-    bool light_control_enabled;
+    bool light_control_enabled = false;
     LightState front_light_state;
     LightState rear_light_state;
 
     // motion state
     double linear_velocity;
     double angular_velocity;
-
-    friend std::ostream &operator<<(std::ostream &os, const ScoutState &state)
-    {
-        std::cout << "-------------------------------" << std::endl;
-        std::cout << "control mode: " << state.control_mode << " , base state: " << state.base_state << std::endl;
-        std::cout << "battery voltage: " << state.battery_voltage << std::endl;
-        std::cout << "velocity (linear, angular): " << state.linear_velocity << ", " << state.angular_velocity;
-    }
 };
 } // namespace wescore
 
