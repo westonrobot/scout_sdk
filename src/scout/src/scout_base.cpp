@@ -13,6 +13,11 @@ void ScoutBase::ConnectSerialPort(const std::string &port_name, int32_t baud_rat
     serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
 }
 
+void ScoutBase::ConnectCANBus(const std::string &can_if_name)
+{
+    can_if_ = std::make_shared<ASyncCAN>(can_if_name);
+}
+
 // void ScoutBase::Run(int32_t loop_period_ms)
 // {
 //     stopwatch::StopWatch sw;
@@ -70,4 +75,10 @@ void ScoutBase::SendCommand(const ScoutCmd &cmd)
     scout_transport::Send_Speed(static_cast<short>(cmd_twist_rotation), static_cast<short>(cent_speed), cmd.count);
     std::cout << "send -> linear: " << cent_speed << "; angular: " << cmd_twist_rotation << std::endl;
 }
+
+void ScoutBase::SendMotionCommand(const MotionControlMessage &msg)
+{
+    can_if_->send_frame(msg.to_frame());
+}
+
 } // namespace wescore

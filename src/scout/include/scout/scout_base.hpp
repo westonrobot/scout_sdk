@@ -15,6 +15,8 @@
 #include <functional>
 
 #include "stopwatch/stopwatch.h"
+#include "async_io/async_can.hpp"
+#include "scout/scout_can_protocol.hpp"
 
 namespace wescore
 {
@@ -49,6 +51,8 @@ public:
 
 public:
     void ConnectSerialPort(const std::string &port_name = "/dev/ttyUSB0", int32_t baud_rate = 115200);
+    void ConnectCANBus(const std::string &can_if_name = "can1");
+
     bool IsConnectionActive() const { return serial_connected_; }
 
     void SetStateUpdateCallback(StateUpdateCallbackFunc cb) { UpdateState = cb; }
@@ -58,11 +62,13 @@ public:
 
     void DisableLightControl();
 
-    void SendMotionCommand();
+    void SendMotionCommand(const MotionControlMessage &msg);
     void SendLightCommand();
 
 private:
     bool serial_connected_ = false;
+
+    std::shared_ptr<ASyncCAN> can_if_;
 
     stopwatch::StopWatch ctrl_loop_stopwatch_;
     TimePoint current_time_;
