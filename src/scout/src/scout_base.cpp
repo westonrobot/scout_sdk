@@ -61,7 +61,7 @@ void ScoutBase::ControlLoop(int32_t period_ms)
         // ------------------
 
         ctrl_sw.sleep_until_ms(period_ms);
-        std::cout << "control loop update frequency: " << 1.0 / ctrl_sw.toc() << std::endl;
+        // std::cout << "control loop update frequency: " << 1.0 / ctrl_sw.toc() << std::endl;
     }
 }
 
@@ -96,20 +96,26 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
     switch (rx_frame->can_id)
     {
     case MSG_MOTION_CONTROL_FEEDBACK_ID:
+        std::cout << "motion control feedback received" << std::endl;
         break;
     case MSG_LIGHT_CONTROL_FEEDBACK_ID:
+        std::cout << "light control feedback received" << std::endl;
         break;
     case MSG_SYSTEM_STATUS_FEEDBACK_ID:
+        std::cout << "system status feedback received" << std::endl;
         break;
     case MSG_MOTOR1_DRIVER_FEEDBACK_ID:
+        std::cout << "motor 1 driver feedback received" << std::endl;
         break;
     case MSG_MOTOR2_DRIVER_FEEDBACK_ID:
+        std::cout << "motor 2 driver feedback received" << std::endl;
         break;
     case MSG_MOTOR3_DRIVER_FEEDBACK_ID:
+        std::cout << "motor 3 driver feedback received" << std::endl;
         break;
     case MSG_MOTOR4_DRIVER_FEEDBACK_ID:
+        std::cout << "motor 4 driver feedback received" << std::endl;
         break;
     }
 }
-
 } // namespace wescore
