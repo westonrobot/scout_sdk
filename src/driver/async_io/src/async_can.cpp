@@ -39,9 +39,6 @@ ASyncCAN::ASyncCAN(std::string device) : tx_total_frames(0),
                                          last_tx_total_frames(0),
                                          last_rx_total_frames(0),
                                          last_iostat(steady_clock::now()),
-                                         tx_in_progress(false),
-                                         tx_q{},
-                                         rx_buf{},
                                          io_service(),
                                          stream(io_service)
 {
@@ -156,28 +153,10 @@ void ASyncCAN::iostat_rx_add(size_t frame)
 
 void ASyncCAN::send_frame(const can_frame &tx_frame)
 {
-    // if (!is_open())
-    // {
-    //     std::cerr << "send: channel closed!"
-    //               << " connection id: " << conn_id << std::endl;
-    //     return;
-    // }
-
-    // {
-    //     lock_guard lock(mutex);
-
-    //     if (tx_q.size() >= MAX_TXQ_SIZE)
-    //         throw std::length_error("ASyncCAN::send_bytes: TX queue overflow");
-
-    //     tx_q.emplace_back(bytes, length);
-    // }
-    // io_service.post(std::bind(&ASyncCAN::do_write, shared_from_this(), true));
-
-    // TODO implement a tx buffer
     iostat_tx_add(1);
     stream.async_write_some(asio::buffer(&tx_frame, sizeof(tx_frame)),
                             [](error_code error, size_t bytes_transferred) {
-                                std::cout << "frame sent" << std::endl;
+                                // std::cout << "frame sent" << std::endl;
                             });
 }
 
@@ -219,52 +198,5 @@ void ASyncCAN::do_read(struct can_frame &rec_frame, asio::posix::basic_stream_de
 
             sthis->call_receive_callback(&sthis->rcv_frame);
             sthis->do_read(std::ref(sthis->rcv_frame), std::ref(sthis->stream));
-        });
-}
-
-void ASyncCAN::do_write(bool check_tx_state)
-{
-    if (check_tx_state && tx_in_progress)
-        return;
-
-    lock_guard lock(mutex);
-    if (tx_q.empty())
-        return;
-
-    tx_in_progress = true;
-    auto sthis = shared_from_this();
-    auto &buf_ref = tx_q.front();
-    stream.async_write_some(
-        buffer(buf_ref.dpos(), buf_ref.nbytes()),
-        [sthis, &buf_ref](error_code error, size_t bytes_transferred) {
-            assert(bytes_transferred <= buf_ref.len);
-
-            if (error)
-            {
-                std::cerr << "write error in connection " << sthis->conn_id << " : "
-                          << error.message().c_str() << std::endl;
-                sthis->close();
-                return;
-            }
-
-            sthis->iostat_tx_add(bytes_transferred);
-            lock_guard lock(sthis->mutex);
-
-            if (sthis->tx_q.empty())
-            {
-                sthis->tx_in_progress = false;
-                return;
-            }
-
-            buf_ref.pos += bytes_transferred;
-            if (buf_ref.nbytes() == 0)
-            {
-                sthis->tx_q.pop_front();
-            }
-
-            if (!sthis->tx_q.empty())
-                sthis->do_write(false);
-            else
-                sthis->tx_in_progress = false;
         });
 }

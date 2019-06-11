@@ -39,8 +39,8 @@
 #include "asio.hpp"
 #include "asio/posix/basic_stream_descriptor.hpp"
 
-#include "async_io/device_error.hpp"
-#include "async_io/msg_buffer.hpp"
+// #include "async_io/device_error.hpp"
+// #include "async_io/msg_buffer.hpp"
 
 namespace wescore
 {
@@ -83,13 +83,13 @@ public:
     void open(std::string device);
     void close();
 
-    void send_frame(const can_frame &tx_frame);
-
     void set_receive_callback(ReceiveCallback cb) { receive_cb = cb; }
     void set_closed_callback(ClosedCallback cb) { port_closed_cb = cb; }
 
     inline bool is_open() { return true; }
     IOStat get_iostat();
+
+    void send_frame(const can_frame &tx_frame);
 
 private:
     // monotonic counter (increment only)
@@ -110,11 +110,6 @@ private:
     asio::io_service io_service;
     asio::posix::basic_stream_descriptor<> stream;
     std::thread io_thread;
-
-    std::atomic<bool> tx_in_progress;
-    std::deque<MsgBuffer> tx_q;
-    std::array<uint8_t, MsgBuffer::MAX_SIZE> rx_buf;
-    std::recursive_mutex mutex;
 
     // callback objects
     ClosedCallback port_closed_cb;

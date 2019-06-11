@@ -134,18 +134,12 @@ struct ScoutMotionCmd
 class ScoutBase
 {
 public:
-    using Clock = std::chrono::high_resolution_clock;
-    using TimePoint = typename Clock::time_point;
-
     ScoutBase() = default;
     ~ScoutBase();
 
     // do not allow copy
     ScoutBase(const ScoutBase &scout) = delete;
     ScoutBase &operator=(const ScoutBase &scout) = delete;
-
-    using StateUpdateCallbackFunc = std::function<void(ScoutState *robot_state)>;
-    using ControlUpdateFunc = std::function<void(void)>;
 
 public:
     void ConnectSerialPort(const std::string &port_name = "/dev/ttyUSB0", int32_t baud_rate = 115200);
@@ -154,9 +148,6 @@ public:
     bool IsConnectionActive() const { return serial_connected_; }
 
     void StartCmdThread(int32_t period_ms);
-
-    void SetStateUpdateCallback(StateUpdateCallbackFunc cb) { UpdateState = cb; }
-    void SetControlUpdateFunction(ControlUpdateFunc ctrl_func) { UpdateControl = ctrl_func; }
 
     void SetMotionCommand(double linear_vel, double angular_vel,
                           ScoutMotionCmd::FaultClearFlag fault_clr_flag = ScoutMotionCmd::FaultClearFlag::NO_FAULT);
@@ -170,17 +161,15 @@ private:
     std::thread cmd_thread_;
     std::mutex motion_cmd_mutex_;
 
-    stopwatch::StopWatch ctrl_loop_stopwatch_;
-    TimePoint current_time_;
-    TimePoint last_time_;
+    // stopwatch::StopWatch ctrl_loop_stopwatch_;
+    // TimePoint current_time_;
+    // TimePoint last_time_;
 
     ScoutState scout_state_;
     ScoutMotionCmd current_motion_cmd_;
 
-    StateUpdateCallbackFunc UpdateState = nullptr;
-    ControlUpdateFunc UpdateControl = nullptr;
-
     void ControlLoop(int32_t period_ms);
+    void ParseCANFrame(can_frame *rx_frame);
 };
 } // namespace wescore
 
