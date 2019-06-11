@@ -3,14 +3,14 @@
 #include <string>
 #include <iostream>
 
-#include "scout_io/serialport.h"
-#include "scout_io/transport.h"
+// #include "scout_io/serialport.h"
+// #include "scout_io/transport.h"
 
 namespace wescore
 {
 void ScoutBase::ConnectSerialPort(const std::string &port_name, int32_t baud_rate)
 {
-    serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
+    // serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
 }
 
 void ScoutBase::ConnectCANBus(const std::string &can_if_name)
@@ -38,19 +38,19 @@ void ScoutBase::ConnectCANBus(const std::string &can_if_name)
 
 bool ScoutBase::QueryRobotState(ScoutState *data)
 {
-    scout_transport::Cmd_t cmd;
-    scout_transport::Read_DataOfChassis_Loop();
-    cmd = scout_transport::Get_dataOfTransport();
+    // scout_transport::Cmd_t cmd;
+    // scout_transport::Read_DataOfChassis_Loop();
+    // cmd = scout_transport::Get_dataOfTransport();
 
-    if (cmd.IsUpdata == true)
-    {
-        cmd.IsUpdata = false;
-        data->linear = cmd.Linear;
-        data->angular = cmd.Angular;
-        scout_transport::Set_dataOfTransport(&cmd);
+    // if (cmd.IsUpdata == true)
+    // {
+    //     cmd.IsUpdata = false;
+    //     data->linear = cmd.Linear;
+    //     data->angular = cmd.Angular;
+    //     scout_transport::Set_dataOfTransport(&cmd);
 
-        return true;
-    }
+    //     return true;
+    // }
 
     return false;
 }
@@ -72,7 +72,7 @@ void ScoutBase::SendCommand(const ScoutCmd &cmd)
     if (cmd_twist_rotation < -20000)
         cmd_twist_rotation = -20000;
 
-    scout_transport::Send_Speed(static_cast<short>(cmd_twist_rotation), static_cast<short>(cent_speed), cmd.count);
+    // scout_transport::Send_Speed(static_cast<short>(cmd_twist_rotation), static_cast<short>(cent_speed), cmd.count);
     std::cout << "send -> linear: " << cent_speed << "; angular: " << cmd_twist_rotation << std::endl;
 }
 
