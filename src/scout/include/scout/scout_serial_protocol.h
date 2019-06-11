@@ -10,8 +10,10 @@
 #ifndef SCOUT_SERIAL_PROTOCOL_HPP
 #define SCOUT_SERIAL_PROTOCOL_HPP
 
-namespace wescore
-{
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct ScoutSerialProtocol
 {
     struct Frame
@@ -26,6 +28,9 @@ struct ScoutSerialProtocol
         unsigned short CheckSum;
     };
 };
-} // namespace wescore
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SCOUT_SERIAL_PROTOCOL_HPP */

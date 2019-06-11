@@ -10,9 +10,9 @@
 #ifndef SCOUT_CAN_PROTOCOL_H
 #define SCOUT_CAN_PROTOCOL_H
 
-// #ifdef __cplusplus
-// extern "C" {
-// #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "stdint.h"
 
@@ -349,8 +349,8 @@ typedef struct
     } data;
 } Motor4DriverStatusMessage;
 
-// #ifdef __cplusplus
-// }
-// #endif
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SCOUT_CAN_PROTOCOL_H */
