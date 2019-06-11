@@ -11,41 +11,12 @@
 #define SCOUT_STATE_HPP
 
 #include <cstdint>
+#include <iostream>
 
 namespace wescore
 {
 struct ScoutState
 {
-    enum class BaseState
-    {
-        NORMAL,
-        ESTOP,
-        EXCEPTION
-    };
-
-    enum class ControlMode
-    {
-        NORMAL,
-        ESTOP,
-        EXCEPTION
-    };
-
-    struct FaultCode
-    {
-        bool can_checksum_error;
-        bool motor_driver_overheat;
-        bool motor_overcurrent;
-        bool battery_low_voltage;
-        bool battery_low_volrage_fault;
-        bool batter_over_voltage;
-        bool motor1_comm_error;
-        bool motor2_comm_error;
-        bool motor3_comm_error;
-        bool motor4_comm_error;
-        bool motor_driver_overheat_protection;
-        bool motor_overcurrent_protection;
-    };
-
     enum MotorID
     {
         FRONT_LEFT = 0,
@@ -61,24 +32,16 @@ struct ScoutState
         double temperature;
     };
 
-    enum class LightMode
-    {
-        CONST_ON,
-        CONST_OFF,
-        BREATH,
-        CUSTOM
-    };
-
     struct LightState
     {
-        LightMode mode;
+        uint8_t mode;
         uint8_t custom_value;
     };
 
     // base state
-    BaseState base_state;
-    ControlMode control_mode;
-    FaultCode fault_code;
+    uint8_t base_state;
+    uint8_t control_mode;
+    uint16_t fault_code;
     double battery_voltage;
 
     // motor state
@@ -92,6 +55,14 @@ struct ScoutState
     // motion state
     double linear_velocity;
     double angular_velocity;
+
+    friend std::ostream &operator<<(std::ostream &os, const ScoutState &state)
+    {
+        std::cout << "-------------------------------" << std::endl;
+        std::cout << "control mode: " << state.control_mode << " , base state: " << state.base_state << std::endl;
+        std::cout << "battery voltage: " << state.battery_voltage << std::endl;
+        std::cout << "velocity (linear, angular): " << state.linear_velocity << ", " << state.angular_velocity;
+    }
 };
 } // namespace wescore
 

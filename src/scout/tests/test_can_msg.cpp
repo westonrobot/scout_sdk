@@ -23,7 +23,7 @@ int main()
     print_msg(msg.data.raw);
 
     LightControlMessage msg2;
-    msg2.data.cmd.light_enable = DISABLE_LIGHT;
+    msg2.data.cmd.light_ctrl_enable = DISABLE_LIGHT_CTRL;
     msg2.data.cmd.front_light_mode = CONST_ON;
     msg2.data.cmd.front_light_custom = 0;
     msg2.data.cmd.rear_light_mode = CONST_ON;

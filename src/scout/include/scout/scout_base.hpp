@@ -20,7 +20,7 @@
 #include "async_io/async_can.hpp"
 
 #include "scout/scout_state.hpp"
-#include "scout/scout_motion_cmd.hpp"
+#include "scout/scout_command.hpp"
 
 namespace wescore
 {

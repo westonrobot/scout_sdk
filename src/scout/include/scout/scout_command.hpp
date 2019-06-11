@@ -1,14 +1,14 @@
 /* 
- * scout_motion_cmd.hpp
+ * scout_command.hpp
  * 
- * Created on: Jun 11, 2019 08:49
+ * Created on: Jun 11, 2019 10:33
  * Description: 
  * 
  * Copyright (c) 2019 Ruixiang Du (rdu)
- */
+ */ 
 
-#ifndef SCOUT_MOTION_CMD_HPP
-#define SCOUT_MOTION_CMD_HPP
+#ifndef SCOUT_COMMAND_HPP
+#define SCOUT_COMMAND_HPP
 
 #include <cstdint>
 
@@ -45,4 +45,4 @@ struct ScoutMotionCmd
 };
 } // namespace wescore
 
-#endif /* SCOUT_MOTION_CMD_HPP */
+#endif /* SCOUT_COMMAND_HPP */

@@ -84,8 +84,8 @@ typedef struct
 
 enum LightControlFlag
 {
-    DISABLE_LIGHT = 0x00,
-    ENABLE_FRONT = 0x01
+    DISABLE_LIGHT_CTRL = 0x00,
+    ENABLE_LIGHT_CTRL = 0x01
 };
 
 enum LightMode
@@ -103,7 +103,7 @@ typedef struct
     union {
         struct CmdDef
         {
-            uint8_t light_enable;
+            uint8_t light_ctrl_enable;
             uint8_t front_light_mode;
             uint8_t front_light_custom;
             uint8_t rear_light_mode;
@@ -159,7 +159,7 @@ typedef struct
     union {
         struct StatusDef
         {
-            uint8_t light_enable;
+            uint8_t light_ctrl_enable;
             uint8_t front_light_mode;
             uint8_t front_light_custom;
             uint8_t rear_light_mode;
@@ -197,7 +197,7 @@ typedef struct
                     uint8_t low_byte;
                 };
                 uint16_t value;
-            } voltage;
+            } battery_voltage;
             union {
                 struct
                 {
