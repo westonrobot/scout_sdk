@@ -36,15 +36,21 @@ int main()
     // std::cout << msg8 << std::endl;
     // std::cout << msg9 << std::endl;
 
-    for (int i = 0; i < 260; ++i)
-    {
+    // for (int i = 0; i < 260; ++i)
+    // {
         MotionControlMessage msg;
         msg.linear_velocity = 0.15;
         msg.angular_velocity = 0.0;
         msg.fault_clear_flag = FaultClearFlag::NO_FAULT;
         msg.gen();
-        std::cout << msg << std::endl;
-    }
+        // std::cout << msg << std::endl;
+
+        std::cout << "ID: " << std::hex << msg.id << ", DLC: " << static_cast<int>(msg.dlc) << ", Data: ";
+        for (int i = 0; i < 8; ++i)
+            std::cout << static_cast<int>(msg.data[i]) << " ";
+        std::cout << ", Checksum: " << std::dec << static_cast<int>(msg.GenCheckSum()) << std::endl;
+        
+    // }
 
     // send CAN frame
     // struct can_frame frame;

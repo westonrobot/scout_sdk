@@ -44,6 +44,7 @@ protected:
         std::memcpy(data, _data, _dlc * sizeof(uint8_t));
     }
 
+public:
     const uint32_t id;
     const int dlc;
     uint8_t data[8] = {0};

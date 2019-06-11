@@ -60,11 +60,11 @@ int main(int argc, char **argv)
         main_sw.tic();
 
         MotionControlMessage msg;
-        msg.linear_velocity = 0.15;
-        msg.angular_velocity = 0.0;
+        msg.linear_velocity = 0;
+        msg.angular_velocity = 0.5;
         msg.fault_clear_flag = FaultClearFlag::NO_FAULT;
         msg.gen();
-        std::cout << msg << std::endl;
+        // std::cout << msg << std::endl;
         scout.SendMotionCommand(msg);
 
         if (main_sw.toc() * 1000 > ctrl_period_ms)
