@@ -52,26 +52,32 @@ int main(int argc, char **argv)
 
     // scout.Run();
 
-    const int32_t ctrl_period_ms = 10;
-    stopwatch::StopWatch main_sw;
+    // const int32_t ctrl_period_ms = 10;
+    // stopwatch::StopWatch main_sw;
+
+    // while (true)
+    // {
+    //     main_sw.tic();
+
+    //     MotionControlMessage msg;
+    //     msg.linear_velocity = 0;
+    //     msg.angular_velocity = 0.5;
+    //     msg.fault_clear_flag = FaultClearFlag::NO_FAULT;
+    //     msg.gen();
+    //     // std::cout << msg << std::endl;
+    //     scout.SendMotionCommand(msg);
+
+    //     if (main_sw.toc() * 1000 > ctrl_period_ms)
+    //         std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
+    //     else
+    //         main_sw.sleep_until_ms(ctrl_period_ms);
+    //     std::cout << "update freq: " << 1.0 / main_sw.toc() << std::endl;
+    // }
+
+    scout.StartCmdThread(10);
 
     while (true)
     {
-        main_sw.tic();
-
-        MotionControlMessage msg;
-        msg.linear_velocity = 0;
-        msg.angular_velocity = 0.5;
-        msg.fault_clear_flag = FaultClearFlag::NO_FAULT;
-        msg.gen();
-        // std::cout << msg << std::endl;
-        scout.SendMotionCommand(msg);
-
-        if (main_sw.toc() * 1000 > ctrl_period_ms)
-            std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
-        else
-            main_sw.sleep_until_ms(ctrl_period_ms);
-        std::cout << "update freq: " << 1.0 / main_sw.toc() << std::endl;
     }
 
     return 0;

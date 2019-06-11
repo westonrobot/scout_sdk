@@ -205,7 +205,7 @@ typedef struct
                     uint8_t low_byte;
                 };
                 uint16_t value;
-            } fault_flag;
+            } fault_code;
             uint8_t count;
             uint8_t checksum;
         } status;

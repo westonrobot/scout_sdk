@@ -3,11 +3,19 @@
 #include <string>
 #include <iostream>
 
+#include "scout/scout_can_protocol.h"
+
 // #include "scout_io/serialport.h"
 // #include "scout_io/transport.h"
 
 namespace wescore
 {
+ScoutBase::~ScoutBase()
+{
+    if (cmd_thread_.joinable())
+        cmd_thread_.join();
+}
+
 void ScoutBase::ConnectSerialPort(const std::string &port_name, int32_t baud_rate)
 {
     // serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
@@ -18,67 +26,66 @@ void ScoutBase::ConnectCANBus(const std::string &can_if_name)
     can_if_ = std::make_shared<ASyncCAN>(can_if_name);
 }
 
-// void ScoutBase::Run(int32_t loop_period_ms)
-// {
-//     stopwatch::StopWatch sw;
-//     while (true)
-//     {
-//         ctrl_loop_stopwatch_.tic();
-
-//         if (UpdateControl != nullptr)
-//             UpdateControl();
-
-//         if (ctrl_loop_stopwatch_.toc() * 1000 > loop_period_ms)
-//             std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
-//         else
-//             ctrl_loop_stopwatch_.sleep_until_ms(loop_period_ms);
-//         // std::cout << "update freq: " << 1.0 / ctrl_loop_stopwatch_.toc() << std::endl;
-//     }
-// }
-
-bool ScoutBase::QueryRobotState(ScoutState *data)
+void ScoutBase::StartCmdThread(int32_t period_ms)
 {
-    // scout_transport::Cmd_t cmd;
-    // scout_transport::Read_DataOfChassis_Loop();
-    // cmd = scout_transport::Get_dataOfTransport();
-
-    // if (cmd.IsUpdata == true)
-    // {
-    //     cmd.IsUpdata = false;
-    //     data->linear = cmd.Linear;
-    //     data->angular = cmd.Angular;
-    //     scout_transport::Set_dataOfTransport(&cmd);
-
-    //     return true;
-    // }
-
-    return false;
+    cmd_thread_ = std::thread(std::bind(&ScoutBase::ControlLoop, this, period_ms));
 }
 
-void ScoutBase::SendCommand(const ScoutCmd &cmd)
+void ScoutBase::ControlLoop(int32_t period_ms)
 {
-    // std::cout << "--- cmd: " << cmd.linear << " , " << cmd.angular << std::endl;
-    double cent_speed = cmd.linear;
-    double cmd_twist_rotation = cmd.angular;
+    stopwatch::StopWatch ctrl_sw;
+    uint8_t cmd_count = 0;
+    while (true)
+    {
+        ctrl_sw.tic();
 
-    cent_speed = cent_speed * 10000;
-    cmd_twist_rotation = cmd_twist_rotation * 10000;
-    if (cent_speed > 20000)
-        cent_speed = 20000;
-    if (cent_speed < -20000)
-        cent_speed = -20000;
-    if (cmd_twist_rotation > 20000)
-        cmd_twist_rotation = 20000;
-    if (cmd_twist_rotation < -20000)
-        cmd_twist_rotation = -20000;
+        MotionControlMessage msg;
+        msg.data.cmd.control_mode = CMD_MODE;
 
-    // scout_transport::Send_Speed(static_cast<short>(cmd_twist_rotation), static_cast<short>(cent_speed), cmd.count);
-    std::cout << "send -> linear: " << cent_speed << "; angular: " << cmd_twist_rotation << std::endl;
+        motion_cmd_mutex_.lock();
+        msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
+        double linear_vel = current_motion_cmd_.linear_velocity;
+        double angular_vel = current_motion_cmd_.angular_velocity;
+        motion_cmd_mutex_.unlock();
+
+        if (linear_vel < ScoutMotionCmd::min_linear_velocity)
+            linear_vel = ScoutMotionCmd::min_linear_velocity;
+        if (linear_vel > ScoutMotionCmd::max_linear_velocity)
+            linear_vel = ScoutMotionCmd::max_linear_velocity;
+        if (angular_vel < ScoutMotionCmd::min_angular_velocity)
+            angular_vel = ScoutMotionCmd::min_angular_velocity;
+        if (angular_vel > ScoutMotionCmd::max_angular_velocity)
+            angular_vel = ScoutMotionCmd::max_angular_velocity;
+
+        msg.data.cmd.linear_velocity_cmd = static_cast<uint8_t>(linear_vel / ScoutMotionCmd::max_linear_velocity * 100.0);
+        msg.data.cmd.angular_velocity_cmd = static_cast<uint8_t>(angular_vel / ScoutMotionCmd::max_angular_velocity * 100.0);
+        msg.data.cmd.reserved0 = 0;
+        msg.data.cmd.reserved1 = 0;
+        msg.data.cmd.count = cmd_count++;
+        msg.data.cmd.checksum = Agilex_CANMsgChecksum(msg.id, msg.data.raw, msg.dlc);
+
+        // send to can bus
+        can_frame frame;
+        frame.can_id = msg.id;
+        frame.can_dlc = msg.dlc;
+        std::memcpy(frame.data, msg.data.raw, msg.dlc * sizeof(uint8_t));
+        can_if_->send_frame(frame);
+        // ------------------
+
+        if (ctrl_sw.toc() * 1000 > period_ms)
+            std::cerr << "UpdateControl() took longer than allowable time for an update iteration" << std::endl;
+        else
+            ctrl_sw.sleep_until_ms(period_ms);
+        std::cout << "update freq: " << 1.0 / ctrl_sw.toc() << std::endl;
+    }
 }
 
-void ScoutBase::SendMotionCommand(const MotionControlMessage &msg)
+void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMotionCmd::FaultClearFlag fault_clr_flag)
 {
-    can_if_->send_frame(msg.to_frame());
+    std::lock_guard<std::mutex> guard(motion_cmd_mutex_);
+    current_motion_cmd_.linear_velocity = linear_vel;
+    current_motion_cmd_.angular_velocity = angular_vel;
+    current_motion_cmd_.fault_clear_flag = fault_clr_flag;
 }
 
 } // namespace wescore
