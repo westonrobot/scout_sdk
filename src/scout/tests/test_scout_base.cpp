@@ -64,6 +64,7 @@ int main(int argc, char **argv)
         msg.angular_velocity = 0.0;
         msg.fault_clear_flag = FaultClearFlag::NO_FAULT;
         msg.gen();
+        std::cout << msg << std::endl;
         scout.SendMotionCommand(msg);
 
         if (main_sw.toc() * 1000 > ctrl_period_ms)
