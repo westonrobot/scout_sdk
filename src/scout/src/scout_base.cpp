@@ -101,16 +101,6 @@ void ScoutBase::ControlLoop(int32_t period_ms)
             l_frame.can_dlc = l_msg.dlc;
             std::memcpy(l_frame.data, l_msg.data.raw, l_msg.dlc * sizeof(uint8_t));
             can_if_->send_frame(l_frame);
-
-            // std::cout << std::hex << static_cast<int>(l_frame.can_id) << " " << static_cast<int>(l_frame.can_dlc) << " "
-            //     << static_cast<int>(l_frame.data[0]) << " "
-            //     << static_cast<int>(l_frame.data[1]) << " "
-            //     << static_cast<int>(l_frame.data[2]) << " "
-            //     << static_cast<int>(l_frame.data[3]) << " "
-            //     << static_cast<int>(l_frame.data[4]) << " "
-            //     << static_cast<int>(l_frame.data[5]) << " "
-            //     << static_cast<int>(l_frame.data[6]) << " "
-            //     << static_cast<int>(l_frame.data[7]) << std::endl;
         }
 
         ctrl_sw.sleep_until_ms(period_ms);
@@ -168,12 +158,6 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
     // otherwise, update robot state with new frame
     std::lock_guard<std::mutex> guard(scout_state_mutex_);
     UpdateScoutState(scout_state_, rx_frame);
-
-    // std::cout << "-------------------------------" << std::endl;
-    // std::cout << "control mode: " << static_cast<int>(scout_state_.control_mode) << " , base state: " << static_cast<int>(scout_state_.base_state) << std::endl;
-    // std::cout << "battery voltage: " << scout_state_.battery_voltage << std::endl;
-    // std::cout << "velocity (linear, angular): " << scout_state_.linear_velocity << ", " << scout_state_.angular_velocity << std::endl;
-    // std::cout << "-------------------------------" << std::endl;
 }
 
 void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
@@ -213,9 +197,6 @@ void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
         state.base_state = msg.data.status.base_state;
         state.battery_voltage = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8) / 10.0;
         state.fault_code = (static_cast<uint16_t>(msg.data.status.fault_code.low_byte) | static_cast<uint16_t>(msg.data.status.fault_code.high_byte) << 8);
-        // uint16_t battery_value = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8);
-        // std::cout << "battery: " << std::hex << static_cast<int>(msg.data.status.battery_voltage.high_byte) << " , "
-        //         << static_cast<int>(msg.data.status.battery_voltage.low_byte) << " => " << battery_value << " = " << state.battery_voltage << std::endl;
         break;
     }
     case MSG_MOTOR1_DRIVER_FEEDBACK_ID:
