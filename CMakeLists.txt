@@ -15,7 +15,7 @@ set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_BUILD_TYPE Debug)
 
 ## Optionally built modules: ON/OFF
-set(BUILD_TESTS OFF)
+set(BUILD_TESTS ON)
 
 ## Add source directories
 add_subdirectory(src)
