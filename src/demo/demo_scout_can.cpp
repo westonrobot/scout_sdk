@@ -1,18 +1,13 @@
-#include <unistd.h>
-
-#include <thread>
-#include <mutex>
-#include <functional>
-#include <string>
-#include <iostream>
-#include <chrono>
-#include <cmath>
-
-#include "stopwatch/stopwatch.h"
+/* 
+ * demo_scout_can.cpp
+ * 
+ * Created on: Jun 12, 2019 05:03
+ * Description: 
+ * 
+ * Copyright (c) 2019 Ruixiang Du (rdu)
+ */ 
 
 #include "scout/scout_base.hpp"
-
-#define TEST_WITHOUT_SERIAL_HARDWARE
 
 using namespace wescore;
 
@@ -29,11 +24,8 @@ int main(int argc, char **argv)
     {
         scout.SetMotionCommand(0.5, 0.2);
 
-        if(count == 10)
-        {
-            // scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
-            scout.DisableLightCmdControl();
-        }
+        if (count == 10)
+            scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
 
         auto state = scout.GetScoutState();
         std::cout << "-------------------------------" << std::endl;
