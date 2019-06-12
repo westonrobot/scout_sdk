@@ -49,6 +49,9 @@ public:
     void SetLightCommand(ScoutLightCmd cmd);
     void DisableLightCmdControl();
 
+    // get robot state
+    ScoutState GetScoutState();
+
     // TODO for testing, will be set private in release
     void UpdateScoutState(ScoutState &state, can_frame *rx_frame);
 
@@ -58,9 +61,9 @@ private:
     std::shared_ptr<ASyncCAN> can_if_;
 
     std::thread cmd_thread_;
+    std::mutex scout_state_mutex_;
     std::mutex motion_cmd_mutex_;
     std::mutex light_cmd_mutex_;
-    std::mutex scout_state_mutex_;
 
     ScoutState scout_state_;
     ScoutMotionCmd current_motion_cmd_;

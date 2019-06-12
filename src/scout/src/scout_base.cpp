@@ -118,6 +118,12 @@ void ScoutBase::ControlLoop(int32_t period_ms)
     }
 }
 
+ScoutState ScoutBase::GetScoutState()
+{
+    std::lock_guard<std::mutex> guard(scout_state_mutex_);
+    return scout_state_;
+}
+
 void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMotionCmd::FaultClearFlag fault_clr_flag)
 {
     if (linear_vel < ScoutMotionCmd::min_linear_velocity)
@@ -179,8 +185,8 @@ void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
         // std::cout << "motion control feedback received" << std::endl;
         MotionStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        state.linear_velocity = (static_cast<uint16_t>(msg.data.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.linear_velocity.high_byte) << 8) / 1000.0;
-        state.angular_velocity = (static_cast<uint16_t>(msg.data.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.angular_velocity.high_byte) << 8) / 1000.0;
+        state.linear_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.linear_velocity.high_byte) << 8) / 1000.0;
+        state.angular_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.angular_velocity.high_byte) << 8) / 1000.0;
         break;
     }
     case MSG_LIGHT_CONTROL_FEEDBACK_ID:
@@ -218,7 +224,7 @@ void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
         Motor1DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         state.motor_states[0].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[0].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        state.motor_states[0].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
         ;
         state.motor_states[0].temperature = msg.data.status.temperature;
         break;
@@ -229,7 +235,7 @@ void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
         Motor2DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         state.motor_states[1].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[1].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        state.motor_states[1].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
         ;
         state.motor_states[1].temperature = msg.data.status.temperature;
         break;
@@ -240,7 +246,7 @@ void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
         Motor3DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         state.motor_states[2].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[2].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        state.motor_states[2].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
         ;
         state.motor_states[2].temperature = msg.data.status.temperature;
         break;
@@ -251,7 +257,7 @@ void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
         Motor4DriverStatusMessage msg;
         std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         state.motor_states[3].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[3].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        state.motor_states[3].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
         state.motor_states[3].temperature = msg.data.status.temperature;
         break;
     }

@@ -35,6 +35,13 @@ int main(int argc, char **argv)
             scout.DisableLightCmdControl();
         }
 
+        auto state = scout.GetScoutState();
+        std::cout << "-------------------------------" << std::endl;
+        std::cout << "control mode: " << static_cast<int>(state.control_mode) << " , base state: " << static_cast<int>(state.base_state) << std::endl;
+        std::cout << "battery voltage: " << state.battery_voltage << std::endl;
+        std::cout << "velocity (linear, angular): " << state.linear_velocity << ", " << state.angular_velocity << std::endl;
+        std::cout << "-------------------------------" << std::endl;
+
         sleep(1);
         ++count;
     }
