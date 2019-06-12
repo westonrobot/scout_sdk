@@ -41,51 +41,76 @@ void ScoutBase::ControlLoop(int32_t period_ms)
         ctrl_sw.tic();
 
         // motion control message
-        MotionControlMessage m_msg;
-        m_msg.data.cmd.control_mode = CMD_MODE;
+        {
+            MotionControlMessage m_msg;
 
-        motion_cmd_mutex_.lock();
-        m_msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
-        m_msg.data.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
-        m_msg.data.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
-        motion_cmd_mutex_.unlock();
+            m_msg.data.cmd.control_mode = CMD_MODE;
 
-        m_msg.data.cmd.reserved0 = 0;
-        m_msg.data.cmd.reserved1 = 0;
-        m_msg.data.cmd.count = cmd_count++;
-        m_msg.data.cmd.checksum = Agilex_CANMsgChecksum(m_msg.id, m_msg.data.raw, m_msg.dlc);
+            motion_cmd_mutex_.lock();
+            m_msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
+            m_msg.data.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
+            m_msg.data.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
+            motion_cmd_mutex_.unlock();
 
-        // send to can bus
-        can_frame frame;
-        frame.can_id = m_msg.id;
-        frame.can_dlc = m_msg.dlc;
-        std::memcpy(frame.data, m_msg.data.raw, m_msg.dlc * sizeof(uint8_t));
-        can_if_->send_frame(frame);
+            m_msg.data.cmd.reserved0 = 0;
+            m_msg.data.cmd.reserved1 = 0;
+            m_msg.data.cmd.count = cmd_count++;
+            m_msg.data.cmd.checksum = Agilex_CANMsgChecksum(m_msg.id, m_msg.data.raw, m_msg.dlc);
+
+            // send to can bus
+            can_frame m_frame;
+            m_frame.can_id = m_msg.id;
+            m_frame.can_dlc = m_msg.dlc;
+            std::memcpy(m_frame.data, m_msg.data.raw, m_msg.dlc * sizeof(uint8_t));
+            can_if_->send_frame(m_frame);
+        }
 
         // check if there is request for light control
         if (light_ctrl_requested_)
         {
             LightControlMessage l_msg;
-            l_msg.data.cmd.light_ctrl_enable = ENABLE_LIGHT_CTRL;
 
             light_cmd_mutex_.lock();
-            l_msg.data.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
-            l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
-            l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
-            l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
+            if(light_ctrl_enabled_)
+            {
+                l_msg.data.cmd.light_ctrl_enable = ENABLE_LIGHT_CTRL;
+
+                l_msg.data.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
+                l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
+                l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
+                l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;                
+            }
+            else
+            {
+                l_msg.data.cmd.light_ctrl_enable = DISABLE_LIGHT_CTRL;
+
+                l_msg.data.cmd.front_light_mode = CONST_OFF;
+                l_msg.data.cmd.front_light_custom = 0;
+                l_msg.data.cmd.rear_light_mode = CONST_OFF;
+                l_msg.data.cmd.rear_light_custom = 0;
+            } 
+            light_ctrl_requested_ = false;
             light_cmd_mutex_.unlock();
 
             l_msg.data.cmd.reserved0 = 0;
             l_msg.data.cmd.count = light_cmd_count++;
             l_msg.data.cmd.checksum = Agilex_CANMsgChecksum(l_msg.id, l_msg.data.raw, l_msg.dlc);
 
-            can_frame frame;
-            frame.can_id = m_msg.id;
-            frame.can_dlc = m_msg.dlc;
-            std::memcpy(frame.data, m_msg.data.raw, m_msg.dlc * sizeof(uint8_t));
-            can_if_->send_frame(frame);
+            can_frame l_frame;
+            l_frame.can_id = l_msg.id;
+            l_frame.can_dlc = l_msg.dlc;
+            std::memcpy(l_frame.data, l_msg.data.raw, l_msg.dlc * sizeof(uint8_t));
+            can_if_->send_frame(l_frame);
 
-            light_ctrl_requested_ = false;
+            // std::cout << std::hex << static_cast<int>(l_frame.can_id) << " " << static_cast<int>(l_frame.can_dlc) << " "
+            //     << static_cast<int>(l_frame.data[0]) << " "
+            //     << static_cast<int>(l_frame.data[1]) << " "
+            //     << static_cast<int>(l_frame.data[2]) << " "
+            //     << static_cast<int>(l_frame.data[3]) << " "
+            //     << static_cast<int>(l_frame.data[4]) << " "
+            //     << static_cast<int>(l_frame.data[5]) << " "
+            //     << static_cast<int>(l_frame.data[6]) << " "
+            //     << static_cast<int>(l_frame.data[7]) << std::endl;
         }
 
         ctrl_sw.sleep_until_ms(period_ms);
@@ -114,6 +139,14 @@ void ScoutBase::SetLightCommand(ScoutLightCmd cmd)
 {
     std::lock_guard<std::mutex> guard(light_cmd_mutex_);
     current_light_cmd_ = cmd;
+    light_ctrl_enabled_ = true;
+    light_ctrl_requested_ = true;
+}
+
+void ScoutBase::DisableLightCmdControl()
+{
+    std::lock_guard<std::mutex> guard(light_cmd_mutex_);
+    light_ctrl_enabled_ = false;
     light_ctrl_requested_ = true;
 }
 
@@ -130,11 +163,11 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
     std::lock_guard<std::mutex> guard(scout_state_mutex_);
     UpdateScoutState(scout_state_, rx_frame);
 
-    std::cout << "-------------------------------" << std::endl;
-    std::cout << "control mode: " << static_cast<int>(scout_state_.control_mode) << " , base state: " << static_cast<int>(scout_state_.base_state) << std::endl;
-    std::cout << "battery voltage: " << scout_state_.battery_voltage << std::endl;
-    std::cout << "velocity (linear, angular): " << scout_state_.linear_velocity << ", " << scout_state_.angular_velocity << std::endl;
-    std::cout << "-------------------------------" << std::endl;
+    // std::cout << "-------------------------------" << std::endl;
+    // std::cout << "control mode: " << static_cast<int>(scout_state_.control_mode) << " , base state: " << static_cast<int>(scout_state_.base_state) << std::endl;
+    // std::cout << "battery voltage: " << scout_state_.battery_voltage << std::endl;
+    // std::cout << "velocity (linear, angular): " << scout_state_.linear_velocity << ", " << scout_state_.angular_velocity << std::endl;
+    // std::cout << "-------------------------------" << std::endl;
 }
 
 void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)

@@ -41,9 +41,13 @@ public:
 
     void StartCmdThread(int32_t period_ms);
 
+    // motion control
     void SetMotionCommand(double linear_vel, double angular_vel,
                           ScoutMotionCmd::FaultClearFlag fault_clr_flag = ScoutMotionCmd::FaultClearFlag::NO_FAULT);
+    
+    // light control
     void SetLightCommand(ScoutLightCmd cmd);
+    void DisableLightCmdControl();
 
     // TODO for testing, will be set private in release
     void UpdateScoutState(ScoutState &state, can_frame *rx_frame);
@@ -62,6 +66,7 @@ private:
     ScoutMotionCmd current_motion_cmd_;
     ScoutLightCmd current_light_cmd_;
 
+    bool light_ctrl_enabled_ = false;
     bool light_ctrl_requested_ = false;
 
     void ControlLoop(int32_t period_ms);

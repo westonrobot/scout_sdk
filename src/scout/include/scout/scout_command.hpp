@@ -48,8 +48,8 @@ struct ScoutLightCmd
 {
     enum class LightMode
     {
-        CONST_ON = 0x00,
-        CONST_OFF = 0x01,
+        CONST_OFF = 0x00,
+        CONST_ON = 0x01,
         BREATH = 0x02,
         CUSTOM = 0x03
     };
