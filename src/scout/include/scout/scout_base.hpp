@@ -37,14 +37,13 @@ public:
 public:
     void ConnectSerialPort(const std::string &port_name = "/dev/ttyUSB0", int32_t baud_rate = 115200);
     void ConnectCANBus(const std::string &can_if_name = "can1");
-
     bool IsConnectionActive() const { return serial_connected_; }
 
     void StartCmdThread(int32_t period_ms);
 
     void SetMotionCommand(double linear_vel, double angular_vel,
                           ScoutMotionCmd::FaultClearFlag fault_clr_flag = ScoutMotionCmd::FaultClearFlag::NO_FAULT);
-    void SetLightCommand();
+    void SetLightCommand(ScoutLightCmd cmd);
 
     // TODO for testing, will be set private in release
     void UpdateScoutState(ScoutState &state, can_frame *rx_frame);
@@ -56,10 +55,14 @@ private:
 
     std::thread cmd_thread_;
     std::mutex motion_cmd_mutex_;
+    std::mutex light_cmd_mutex_;
     std::mutex scout_state_mutex_;
 
     ScoutState scout_state_;
     ScoutMotionCmd current_motion_cmd_;
+    ScoutLightCmd current_light_cmd_;
+
+    bool light_ctrl_requested_ = false;
 
     void ControlLoop(int32_t period_ms);
     void ParseCANFrame(can_frame *rx_frame);

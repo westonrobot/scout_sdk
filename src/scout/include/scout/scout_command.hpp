@@ -5,7 +5,7 @@
  * Description: 
  * 
  * Copyright (c) 2019 Ruixiang Du (rdu)
- */ 
+ */
 
 #ifndef SCOUT_COMMAND_HPP
 #define SCOUT_COMMAND_HPP
@@ -42,6 +42,26 @@ struct ScoutMotionCmd
     static constexpr double min_linear_velocity = -1.5;     // -1.5m/s
     static constexpr double max_angular_velocity = 0.7853;  // 0.7853rad/s
     static constexpr double min_angular_velocity = -0.7853; // -0.7853rad/s
+};
+
+struct ScoutLightCmd
+{
+    enum class LightMode
+    {
+        CONST_ON = 0x00,
+        CONST_OFF = 0x01,
+        BREATH = 0x02,
+        CUSTOM = 0x03
+    };
+
+    ScoutLightCmd() = default;
+    ScoutLightCmd(LightMode f_mode, uint8_t f_value, LightMode r_mode, uint8_t r_value) : front_mode(f_mode), front_custom_value(f_value),
+                                                                                          rear_mode(r_mode), rear_custom_value(r_value) {}
+
+    LightMode front_mode;
+    uint8_t front_custom_value;
+    LightMode rear_mode;
+    uint8_t rear_custom_value;
 };
 } // namespace wescore
 

@@ -35,31 +35,58 @@ void ScoutBase::ControlLoop(int32_t period_ms)
 {
     stopwatch::StopWatch ctrl_sw;
     uint8_t cmd_count = 0;
+    uint8_t light_cmd_count = 0;
     while (true)
     {
         ctrl_sw.tic();
 
-        MotionControlMessage msg;
-        msg.data.cmd.control_mode = CMD_MODE;
+        // motion control message
+        MotionControlMessage m_msg;
+        m_msg.data.cmd.control_mode = CMD_MODE;
 
         motion_cmd_mutex_.lock();
-        msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
-        msg.data.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
-        msg.data.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
+        m_msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
+        m_msg.data.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
+        m_msg.data.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
         motion_cmd_mutex_.unlock();
 
-        msg.data.cmd.reserved0 = 0;
-        msg.data.cmd.reserved1 = 0;
-        msg.data.cmd.count = cmd_count++;
-        msg.data.cmd.checksum = Agilex_CANMsgChecksum(msg.id, msg.data.raw, msg.dlc);
+        m_msg.data.cmd.reserved0 = 0;
+        m_msg.data.cmd.reserved1 = 0;
+        m_msg.data.cmd.count = cmd_count++;
+        m_msg.data.cmd.checksum = Agilex_CANMsgChecksum(m_msg.id, m_msg.data.raw, m_msg.dlc);
 
         // send to can bus
         can_frame frame;
-        frame.can_id = msg.id;
-        frame.can_dlc = msg.dlc;
-        std::memcpy(frame.data, msg.data.raw, msg.dlc * sizeof(uint8_t));
+        frame.can_id = m_msg.id;
+        frame.can_dlc = m_msg.dlc;
+        std::memcpy(frame.data, m_msg.data.raw, m_msg.dlc * sizeof(uint8_t));
         can_if_->send_frame(frame);
-        // ------------------
+
+        // check if there is request for light control
+        if (light_ctrl_requested_)
+        {
+            LightControlMessage l_msg;
+            l_msg.data.cmd.light_ctrl_enable = ENABLE_LIGHT_CTRL;
+
+            light_cmd_mutex_.lock();
+            l_msg.data.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
+            l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
+            l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
+            l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
+            light_cmd_mutex_.unlock();
+
+            l_msg.data.cmd.reserved0 = 0;
+            l_msg.data.cmd.count = light_cmd_count++;
+            l_msg.data.cmd.checksum = Agilex_CANMsgChecksum(l_msg.id, l_msg.data.raw, l_msg.dlc);
+
+            can_frame frame;
+            frame.can_id = m_msg.id;
+            frame.can_dlc = m_msg.dlc;
+            std::memcpy(frame.data, m_msg.data.raw, m_msg.dlc * sizeof(uint8_t));
+            can_if_->send_frame(frame);
+
+            light_ctrl_requested_ = false;
+        }
 
         ctrl_sw.sleep_until_ms(period_ms);
         // std::cout << "control loop update frequency: " << 1.0 / ctrl_sw.toc() << std::endl;
@@ -81,6 +108,13 @@ void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMot
     current_motion_cmd_.linear_velocity = static_cast<uint8_t>(linear_vel / ScoutMotionCmd::max_linear_velocity * 100.0);
     current_motion_cmd_.angular_velocity = static_cast<uint8_t>(angular_vel / ScoutMotionCmd::max_angular_velocity * 100.0);
     current_motion_cmd_.fault_clear_flag = fault_clr_flag;
+}
+
+void ScoutBase::SetLightCommand(ScoutLightCmd cmd)
+{
+    std::lock_guard<std::mutex> guard(light_cmd_mutex_);
+    current_light_cmd_ = cmd;
+    light_ctrl_requested_ = true;
 }
 
 void ScoutBase::ParseCANFrame(can_frame *rx_frame)
