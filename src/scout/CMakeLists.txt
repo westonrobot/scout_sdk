@@ -26,9 +26,9 @@ set(SCOUT_BASE_SRC
     src/scout_base.cpp
     # src/scout_serial.cpp
 )
-add_library(scoutbase STATIC ${SCOUT_BASE_SRC})
-target_link_libraries(scoutbase asyncio stopwatch)
-target_include_directories(scoutbase PUBLIC
+add_library(scout_sdk STATIC ${SCOUT_BASE_SRC})
+target_link_libraries(scout_sdk asyncio stopwatch)
+target_include_directories(scout_sdk PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
 	$<INSTALL_INTERFACE:include>	

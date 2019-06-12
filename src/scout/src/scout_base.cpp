@@ -85,101 +85,109 @@ void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMot
 
 void ScoutBase::ParseCANFrame(can_frame *rx_frame)
 {
-    // validate checksum
+    // validate checksum, discard frame if fails
     if (!rx_frame->data[7] == Agilex_CANMsgChecksum(rx_frame->can_id, rx_frame->data, rx_frame->can_dlc))
     {
         std::cerr << "ERROR: checksum mismatch, discard frame with id " << rx_frame->can_id << std::endl;
         return;
     }
 
-    // otherwise, update robot state
+    // otherwise, update robot state with new frame
     std::lock_guard<std::mutex> guard(scout_state_mutex_);
-    switch (rx_frame->can_id)
-    {
-    case MSG_MOTION_CONTROL_FEEDBACK_ID:
-    {
-        std::cout << "motion control feedback received" << std::endl;
-        MotionStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.linear_velocity = (static_cast<uint16_t>(msg.data.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.linear_velocity.high_byte) << 8) / 1000.0;
-        scout_state_.angular_velocity = (static_cast<uint16_t>(msg.data.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.angular_velocity.high_byte) << 8)/ 1000.0;
-        break;
-    }
-    case MSG_LIGHT_CONTROL_FEEDBACK_ID:
-    {
-        std::cout << "light control feedback received" << std::endl;
-        LightStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        if (msg.data.status.light_ctrl_enable == DISABLE_LIGHT_CTRL)
-            scout_state_.light_control_enabled = false;
-        else
-            scout_state_.light_control_enabled = true;
-        scout_state_.front_light_state.mode = msg.data.status.front_light_mode;
-        scout_state_.front_light_state.custom_value = msg.data.status.front_light_custom;
-        scout_state_.rear_light_state.mode = msg.data.status.rear_light_mode;
-        scout_state_.rear_light_state.custom_value = msg.data.status.rear_light_custom;
-        break;
-    }
-    case MSG_SYSTEM_STATUS_FEEDBACK_ID:
-    {
-        std::cout << "system status feedback received" << std::endl;
-        SystemStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.control_mode = msg.data.status.control_mode;
-        scout_state_.base_state = msg.data.status.base_state;
-        scout_state_.battery_voltage = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8) / 10.0;
-        scout_state_.fault_code = (static_cast<uint16_t>(msg.data.status.fault_code.low_byte) | static_cast<uint16_t>(msg.data.status.fault_code.high_byte) << 8);
-        // uint16_t battery_value = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8);
-        // std::cout << "battery: " << std::hex << static_cast<int>(msg.data.status.battery_voltage.high_byte) << " , "
-        //         << static_cast<int>(msg.data.status.battery_voltage.low_byte) << " => " << battery_value << " = " << scout_state_.battery_voltage << std::endl;
-        break;
-    }
-    case MSG_MOTOR1_DRIVER_FEEDBACK_ID:
-    {
-        std::cout << "motor 1 driver feedback received" << std::endl;
-        Motor1DriverStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[0].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        scout_state_.motor_states[0].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
-        scout_state_.motor_states[0].temperature = msg.data.status.temperature;
-        break;
-    }
-    case MSG_MOTOR2_DRIVER_FEEDBACK_ID:
-    {
-        std::cout << "motor 2 driver feedback received" << std::endl;
-        Motor2DriverStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[1].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        scout_state_.motor_states[1].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
-        scout_state_.motor_states[1].temperature = msg.data.status.temperature;
-        break;
-    }
-    case MSG_MOTOR3_DRIVER_FEEDBACK_ID:
-    {
-        std::cout << "motor 3 driver feedback received" << std::endl;
-        Motor3DriverStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[2].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        scout_state_.motor_states[2].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
-        scout_state_.motor_states[2].temperature = msg.data.status.temperature;
-        break;
-    }
-    case MSG_MOTOR4_DRIVER_FEEDBACK_ID:
-    {
-        std::cout << "motor 4 driver feedback received" << std::endl;
-        Motor4DriverStatusMessage msg;
-        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        scout_state_.motor_states[3].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
-        scout_state_.motor_states[3].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);;
-        scout_state_.motor_states[3].temperature = msg.data.status.temperature;
-        break;
-    }
-    }
+    UpdateScoutState(scout_state_, rx_frame);
 
     std::cout << "-------------------------------" << std::endl;
     std::cout << "control mode: " << static_cast<int>(scout_state_.control_mode) << " , base state: " << static_cast<int>(scout_state_.base_state) << std::endl;
     std::cout << "battery voltage: " << scout_state_.battery_voltage << std::endl;
     std::cout << "velocity (linear, angular): " << scout_state_.linear_velocity << ", " << scout_state_.angular_velocity << std::endl;
     std::cout << "-------------------------------" << std::endl;
+}
+
+void ScoutBase::UpdateScoutState(ScoutState &state, can_frame *rx_frame)
+{
+    switch (rx_frame->can_id)
+    {
+    case MSG_MOTION_CONTROL_FEEDBACK_ID:
+    {
+        // std::cout << "motion control feedback received" << std::endl;
+        MotionStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        state.linear_velocity = (static_cast<uint16_t>(msg.data.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.linear_velocity.high_byte) << 8) / 1000.0;
+        state.angular_velocity = (static_cast<uint16_t>(msg.data.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.angular_velocity.high_byte) << 8) / 1000.0;
+        break;
+    }
+    case MSG_LIGHT_CONTROL_FEEDBACK_ID:
+    {
+        // std::cout << "light control feedback received" << std::endl;
+        LightStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        if (msg.data.status.light_ctrl_enable == DISABLE_LIGHT_CTRL)
+            state.light_control_enabled = false;
+        else
+            state.light_control_enabled = true;
+        state.front_light_state.mode = msg.data.status.front_light_mode;
+        state.front_light_state.custom_value = msg.data.status.front_light_custom;
+        state.rear_light_state.mode = msg.data.status.rear_light_mode;
+        state.rear_light_state.custom_value = msg.data.status.rear_light_custom;
+        break;
+    }
+    case MSG_SYSTEM_STATUS_FEEDBACK_ID:
+    {
+        // std::cout << "system status feedback received" << std::endl;
+        SystemStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        state.control_mode = msg.data.status.control_mode;
+        state.base_state = msg.data.status.base_state;
+        state.battery_voltage = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8) / 10.0;
+        state.fault_code = (static_cast<uint16_t>(msg.data.status.fault_code.low_byte) | static_cast<uint16_t>(msg.data.status.fault_code.high_byte) << 8);
+        // uint16_t battery_value = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8);
+        // std::cout << "battery: " << std::hex << static_cast<int>(msg.data.status.battery_voltage.high_byte) << " , "
+        //         << static_cast<int>(msg.data.status.battery_voltage.low_byte) << " => " << battery_value << " = " << state.battery_voltage << std::endl;
+        break;
+    }
+    case MSG_MOTOR1_DRIVER_FEEDBACK_ID:
+    {
+        // std::cout << "motor 1 driver feedback received" << std::endl;
+        Motor1DriverStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        state.motor_states[0].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        state.motor_states[0].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        ;
+        state.motor_states[0].temperature = msg.data.status.temperature;
+        break;
+    }
+    case MSG_MOTOR2_DRIVER_FEEDBACK_ID:
+    {
+        // std::cout << "motor 2 driver feedback received" << std::endl;
+        Motor2DriverStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        state.motor_states[1].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        state.motor_states[1].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        ;
+        state.motor_states[1].temperature = msg.data.status.temperature;
+        break;
+    }
+    case MSG_MOTOR3_DRIVER_FEEDBACK_ID:
+    {
+        // std::cout << "motor 3 driver feedback received" << std::endl;
+        Motor3DriverStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        state.motor_states[2].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        state.motor_states[2].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        ;
+        state.motor_states[2].temperature = msg.data.status.temperature;
+        break;
+    }
+    case MSG_MOTOR4_DRIVER_FEEDBACK_ID:
+    {
+        // std::cout << "motor 4 driver feedback received" << std::endl;
+        Motor4DriverStatusMessage msg;
+        std::memcpy(msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
+        state.motor_states[3].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+        state.motor_states[3].rpm = (static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+        state.motor_states[3].temperature = msg.data.status.temperature;
+        break;
+    }
+    }
 }
 } // namespace wescore

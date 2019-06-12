@@ -19,8 +19,8 @@ struct ScoutState
 {
     enum MotorID
     {
-        FRONT_LEFT = 0,
-        FRONT_RIGHT = 1,
+        FRONT_RIGHT = 0,
+        FRONT_LEFT = 1,
         REAR_LEFT = 2,
         REAR_RIGHT = 3
     };

@@ -46,6 +46,9 @@ public:
                           ScoutMotionCmd::FaultClearFlag fault_clr_flag = ScoutMotionCmd::FaultClearFlag::NO_FAULT);
     void SetLightCommand();
 
+    // TODO for testing, will be set private in release
+    void UpdateScoutState(ScoutState &state, can_frame *rx_frame);
+
 private:
     bool serial_connected_ = false;
 
