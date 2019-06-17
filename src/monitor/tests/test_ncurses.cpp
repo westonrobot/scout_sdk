@@ -1,107 +1,118 @@
-#include <ncurses.h>
+#include <panel.h>
 #include <string.h>
 
-#define WIDTH 30
-#define HEIGHT 10 
+#define NLINES 10
+#define NCOLS 40
 
-int startx = 0;
-int starty = 0;
-
-char *choices[] = { 	"Choice 1",
-			"Choice 2",
-			"Choice 3",
-			"Choice 4",
-			"Exit",
-		  };
-
-int n_choices = sizeof(choices) / sizeof(char *);
-
-void print_menu(WINDOW *menu_win, int highlight);
-void report_choice(int mouse_x, int mouse_y, int *p_choice);
+void init_wins(WINDOW **wins, int n);
+void win_show(WINDOW *win, char *label, int label_color);
+void print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, chtype color);
 
 int main()
-{	int c, choice = 0;
-	WINDOW *menu_win;
-	MEVENT event;
+{	WINDOW *my_wins[3];
+	PANEL  *my_panels[3];
+	PANEL  *top;
+	int ch;
 
 	/* Initialize curses */
 	initscr();
-	clear();
+	start_color();
+	cbreak();
 	noecho();
-	cbreak();	//Line buffering disabled. pass on everything
+	keypad(stdscr, TRUE);
 
-	/* Try to put the window in the middle of screen */
-	startx = (80 - WIDTH) / 2;
-	starty = (24 - HEIGHT) / 2;
-	
-	attron(A_REVERSE);
-	mvprintw(23, 1, "Click on Exit to quit (Works best in a virtual console)");
-	refresh();
-	attroff(A_REVERSE);
+	/* Initialize all the colors */
+	init_pair(1, COLOR_RED, COLOR_BLACK);
+	init_pair(2, COLOR_GREEN, COLOR_BLACK);
+	init_pair(3, COLOR_BLUE, COLOR_BLACK);
+	init_pair(4, COLOR_CYAN, COLOR_BLACK);
 
-	/* Print the menu for the first time */
-	menu_win = newwin(HEIGHT, WIDTH, starty, startx);
-	print_menu(menu_win, 1);
-	/* Get all the mouse events */
-	mousemask(ALL_MOUSE_EVENTS, NULL);
+	init_wins(my_wins, 3);
 	
-	while(1)
-	{	c = wgetch(menu_win);
-		switch(c)
-		{	case KEY_MOUSE:
-			if(getmouse(&event) == OK)
-			{	/* When the user clicks left mouse button */
-				if(event.bstate & BUTTON1_PRESSED)
-				{	report_choice(event.x + 1, event.y + 1, &choice);
-					if(choice == -1) //Exit chosen
-						goto end;
-					mvprintw(22, 1, "Choice made is : %d String Chosen is \"%10s\"", choice, choices[choice - 1]);
-					refresh(); 
-				}
-			}
-			print_menu(menu_win, choice);
-			break;
+	/* Attach a panel to each window */ 	/* Order is bottom up */
+	my_panels[0] = new_panel(my_wins[0]); 	/* Push 0, order: stdscr-0 */
+	my_panels[1] = new_panel(my_wins[1]); 	/* Push 1, order: stdscr-0-1 */
+	my_panels[2] = new_panel(my_wins[2]); 	/* Push 2, order: stdscr-0-1-2 */
+
+	/* Set up the user pointers to the next panel */
+	set_panel_userptr(my_panels[0], my_panels[1]);
+	set_panel_userptr(my_panels[1], my_panels[2]);
+	set_panel_userptr(my_panels[2], my_panels[0]);
+
+	/* Update the stacking order. 2nd panel will be on top */
+	update_panels();
+
+	/* Show it on the screen */
+	attron(COLOR_PAIR(4));
+	mvprintw(LINES - 2, 0, "Use tab to browse through the windows (F1 to Exit)");
+	attroff(COLOR_PAIR(4));
+	doupdate();
+
+	top = my_panels[2];
+	while((ch = getch()) != KEY_F(1))
+	{	switch(ch)
+		{	case 9:
+				top = (PANEL *)panel_userptr(top);
+				top_panel(top);
+				break;
 		}
-	}		
-end:
+		update_panels();
+		doupdate();
+	}
 	endwin();
 	return 0;
 }
 
+/* Put all the windows */
+void init_wins(WINDOW **wins, int n)
+{	int x, y, i;
+	char label[80];
 
-void print_menu(WINDOW *menu_win, int highlight)
-{
-	int x, y, i;	
-
-	x = 2;
 	y = 2;
-	box(menu_win, 0, 0);
-	for(i = 0; i < n_choices; ++i)
-	{	if(highlight == i + 1)
-		{	wattron(menu_win, A_REVERSE); 
-			mvwprintw(menu_win, y, x, "%s", choices[i]);
-			wattroff(menu_win, A_REVERSE);
-		}
-		else
-			mvwprintw(menu_win, y, x, "%s", choices[i]);
-		++y;
+	x = 10;
+	for(i = 0; i < n; ++i)
+	{	wins[i] = newwin(NLINES, NCOLS, y, x);
+		sprintf(label, "Window Number %d", i + 1);
+		win_show(wins[i], label, i + 1);
+		y += 3;
+		x += 7;
 	}
-	wrefresh(menu_win);
 }
 
-/* Report the choice according to mouse position */
-void report_choice(int mouse_x, int mouse_y, int *p_choice)
-{	int i,j, choice;
+/* Show the window with a border and a label */
+void win_show(WINDOW *win, char *label, int label_color)
+{	int startx, starty, height, width;
 
-	i = startx + 2;
-	j = starty + 3;
+	getbegyx(win, starty, startx);
+	getmaxyx(win, height, width);
+
+	box(win, 0, 0);
+	mvwaddch(win, 2, 0, ACS_LTEE); 
+	mvwhline(win, 2, 1, ACS_HLINE, width - 2); 
+	mvwaddch(win, 2, width - 1, ACS_RTEE); 
 	
-	for(choice = 0; choice < n_choices; ++choice)
-		if(mouse_y == j + choice && mouse_x >= i && mouse_x <= i + strlen(choices[choice]))
-		{	if(choice == n_choices - 1)
-				*p_choice = -1;		
-			else
-				*p_choice = choice + 1;	
-			break;
-		}
+	print_in_middle(win, 1, 0, width, label, COLOR_PAIR(label_color));
+}
+
+void print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, chtype color)
+{	int length, x, y;
+	float temp;
+
+	if(win == NULL)
+		win = stdscr;
+	getyx(win, y, x);
+	if(startx != 0)
+		x = startx;
+	if(starty != 0)
+		y = starty;
+	if(width == 0)
+		width = 80;
+
+	length = strlen(string);
+	temp = (width - length)/ 2;
+	x = startx + (int)temp;
+	wattron(win, color);
+	mvwprintw(win, y, x, "%s", string);
+	wattroff(win, color);
+	refresh();
 }
