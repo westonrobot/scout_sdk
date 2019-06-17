@@ -125,21 +125,14 @@ typedef struct
     union {
         struct StatusDef
         {
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                int16_t value;
+            struct {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } linear_velocity;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                int16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } angular_velocity;
             uint8_t reserved0;
             uint8_t reserved1;
@@ -190,21 +183,15 @@ typedef struct
         {
             uint8_t base_state;
             uint8_t control_mode;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                uint16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } battery_voltage;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                uint16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } fault_code;
             uint8_t count;
             uint8_t checksum;
@@ -222,21 +209,15 @@ typedef struct
     union {
         struct StatusDef
         {
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                uint16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } current;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                int16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } rpm;
             int8_t temperature;
             uint8_t reserved0;
@@ -256,21 +237,15 @@ typedef struct
     union {
         struct StatusDef
         {
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                uint16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } current;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                int16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } rpm;
             int8_t temperature;
             uint8_t reserved0;
@@ -290,21 +265,15 @@ typedef struct
     union {
         struct StatusDef
         {
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                uint16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } current;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                int16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } rpm;
             int8_t temperature;
             uint8_t reserved0;
@@ -324,21 +293,15 @@ typedef struct
     union {
         struct StatusDef
         {
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                uint16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } current;
-            union {
-                struct
-                {
-                    uint8_t high_byte;
-                    uint8_t low_byte;
-                };
-                int16_t value;
+            struct
+            {
+                uint8_t high_byte;
+                uint8_t low_byte;
             } rpm;
             int8_t temperature;
             uint8_t reserved0;
