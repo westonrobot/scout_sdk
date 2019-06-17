@@ -4,7 +4,9 @@ add_subdirectory(scout)
 add_subdirectory(driver)
 add_subdirectory(third_party)
 
+if(BUILD_MONITOR)
 add_subdirectory(monitor)
+endif()
 
 if(BUILD_TESTS)
     add_subdirectory(unit_tests)

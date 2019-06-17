@@ -16,6 +16,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 ## Optionally built modules: ON/OFF
 set(BUILD_TESTS ON)
+set(BUILD_MONITOR ON)
 
 ## Add source directories
 add_subdirectory(src)

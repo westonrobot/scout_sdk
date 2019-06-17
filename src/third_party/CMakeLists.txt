@@ -9,6 +9,7 @@ set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 ## Add sub source directories
 add_subdirectory(asio)
 add_subdirectory(stopwatch)
+
 if(BUILD_TESTS)
 add_subdirectory(googletest)
 endif()
