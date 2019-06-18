@@ -25,7 +25,34 @@ public:
 
 private:
     bool keep_running_ = true;
-    void Update();
+
+    int term_sx_ = -1;
+    int term_sy_ = -1;
+
+    WINDOW *body_info_win_;
+    int bi_win_sx_;
+    int bi_win_sy_;
+    int bi_origin_x_;
+    int bi_origin_y_;
+
+    WINDOW *system_info_win_;
+    int si_win_sx_;
+    int si_win_sy_;
+    int si_origin_x_;
+    int si_origin_y_;
+
+    WINDOW *scout_cmd_win_;
+
+    bool resizing_detected_;
+
+    void UpdateAll();
+
+    void CheckWindowDimensions();
+    void HandleResizing();
+
+    void UpdateScoutBodyInfo();
+    void UpdateScoutSystemInfo();
+    void UpdateScoutCmdWindow();
 };
 } // namespace wescore
 
