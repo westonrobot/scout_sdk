@@ -3,8 +3,77 @@
 #include <string>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cstdint>
+#include <ratio>
+#include <thread>
 
 #include "scout/scout_can_protocol.h"
+
+namespace
+{
+// source: https://github.com/rxdu/stopwatch
+struct StopWatch
+{
+    using Clock = std::chrono::high_resolution_clock;
+    using time_point = typename Clock::time_point;
+    using duration = typename Clock::duration;
+
+    StopWatch() { tic_point = Clock::now(); };
+
+    time_point tic_point;
+
+    void tic()
+    {
+        tic_point = Clock::now();
+    };
+
+    double toc()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tic_point).count() / 1000000.0;
+    };
+
+    // for different precisions
+    double stoc()
+    {
+        return std::chrono::duration_cast<std::chrono::seconds>(Clock::now() - tic_point).count();
+    };
+
+    double mtoc()
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - tic_point).count();
+    };
+
+    double utoc()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tic_point).count();
+    };
+
+    double ntoc()
+    {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - tic_point).count();
+    };
+
+    // you have to call tic() before calling this function
+    void sleep_until_ms(int64_t period_ms)
+    {
+        int64_t duration = period_ms - std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - tic_point).count();
+
+        if (duration > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+    };
+
+    void sleep_until_us(int64_t period_us)
+    {
+        int64_t duration = period_us - std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tic_point).count();
+
+        if (duration > 0)
+            std::this_thread::sleep_for(std::chrono::microseconds(duration));
+    };
+};
+} // namespace
 
 namespace wescore
 {
@@ -12,11 +81,6 @@ ScoutBase::~ScoutBase()
 {
     if (cmd_thread_.joinable())
         cmd_thread_.join();
-}
-
-void ScoutBase::ConnectSerialPort(const std::string &port_name, int32_t baud_rate)
-{
-    // serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
 }
 
 void ScoutBase::ConnectCANBus(const std::string &can_if_name)
@@ -33,7 +97,7 @@ void ScoutBase::StartCmdThread(int32_t period_ms)
 
 void ScoutBase::ControlLoop(int32_t period_ms)
 {
-    stopwatch::StopWatch ctrl_sw;
+    StopWatch ctrl_sw;
     uint8_t cmd_count = 0;
     uint8_t light_cmd_count = 0;
     while (true)
@@ -71,14 +135,14 @@ void ScoutBase::ControlLoop(int32_t period_ms)
             LightControlMessage l_msg;
 
             light_cmd_mutex_.lock();
-            if(light_ctrl_enabled_)
+            if (light_ctrl_enabled_)
             {
                 l_msg.data.cmd.light_ctrl_enable = ENABLE_LIGHT_CTRL;
 
                 l_msg.data.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
                 l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
                 l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
-                l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;                
+                l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
             }
             else
             {
@@ -88,7 +152,7 @@ void ScoutBase::ControlLoop(int32_t period_ms)
                 l_msg.data.cmd.front_light_custom = 0;
                 l_msg.data.cmd.rear_light_mode = CONST_OFF;
                 l_msg.data.cmd.rear_light_custom = 0;
-            } 
+            }
             light_ctrl_requested_ = false;
             light_cmd_mutex_.unlock();
 

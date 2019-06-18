@@ -21,14 +21,17 @@ else()
 	message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 or C++11 support. Please use a different C++ compiler.")
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
 ## Add libraries
 set(SCOUT_BASE_SRC 
     src/scout_base.cpp
     # src/scout_serial.cpp
 )
-add_library(scout_base STATIC ${SCOUT_BASE_SRC})
-target_link_libraries(scout_base asyncio stopwatch)
-target_include_directories(scout_base PUBLIC
+add_library(scoutbase STATIC ${SCOUT_BASE_SRC})
+set_target_properties(scoutbase PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(scoutbase asyncio)
+target_include_directories(scoutbase PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
 	$<INSTALL_INTERFACE:include>	
