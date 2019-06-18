@@ -24,8 +24,23 @@
 #include "monitor/scout_monitor.hpp"
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include "stopwatch/stopwatch.h"
+
+namespace
+{
+// reference: https://thispointer.com/c-convert-double-to-string-and-manage-precision-scientific-notation/
+std::string ConvertVelocityToString(double vel)
+{
+    std::ostringstream streamObj;
+    streamObj << std::fixed;
+    streamObj << std::setprecision(3);
+    streamObj << vel;
+    return streamObj.str();
+}
+} // namespace
 
 namespace wescore
 {
@@ -41,7 +56,7 @@ ScoutMonitor::ScoutMonitor()
     intrflush(stdscr, FALSE);
     keypad(stdscr, TRUE);
 
-    CheckWindowDimensions();
+    CalcDimensions();
 
     // setup sub-windows
     body_info_win_ = newwin(bi_win_sy_, bi_win_sx_, bi_origin_y_, bi_origin_x_);
@@ -57,28 +72,9 @@ ScoutMonitor::~ScoutMonitor()
 
 void ScoutMonitor::UpdateAll()
 {
-    // int ch = 'x';
+    ClearAll();
 
-    // printw("Type any character to see it in bold\n");
-    // // ch = getch();                 /* If raw() hadn't been called
-    // // 				 * we have to press enter before it
-    // // 				 * gets to the program 		*/
-    // // if (ch == KEY_F(1))           /* Without keypad enabled this will */
-    // //     printw("F1 Key pressed"); /*  not get to us either	*/
-    // /* Without noecho() some ugly escape
-    // 				 * charachters might have been printed
-    // 				 * on screen			*/
-    // // else
-    // // {
-    // printw("The pressed key is ");
-    // attron(A_BOLD);
-    // printw("%c\n", ch);
-    // attroff(A_BOLD);
-    // // }
-
-    // refresh(); /* Print it on to the real screen */
-    // getch();   /* Wait for user input */
-    CheckWindowDimensions();
+    CalcDimensions();
     if (resizing_detected_)
         HandleResizing();
 
@@ -98,11 +94,11 @@ void ScoutMonitor::Run()
         UpdateAll();
 
         // manage window refresh rate
-        sw.sleep_until_ms(20);
+        sw.sleep_until_ms(500);
     }
 }
 
-void ScoutMonitor::CheckWindowDimensions()
+void ScoutMonitor::CalcDimensions()
 {
     int sy, sx;
     getmaxyx(stdscr, sy, sx);
@@ -114,12 +110,12 @@ void ScoutMonitor::CheckWindowDimensions()
         term_sy_ = sy;
         term_sx_ = sx;
 
-        bi_win_sy_ = term_sy_ * 2 / 3;
+        bi_win_sy_ = term_sy_ * 3 / 4;
         bi_win_sx_ = term_sx_ * 2 / 3;
         bi_origin_y_ = 0;
         bi_origin_x_ = 0;
 
-        si_win_sy_ = term_sy_ * 2 / 3;
+        si_win_sy_ = term_sy_ * 3 / 4;
         si_win_sx_ = term_sx_ * 1 / 3;
         si_origin_y_ = 0;
         si_origin_x_ = bi_win_sx_;
@@ -128,44 +124,111 @@ void ScoutMonitor::CheckWindowDimensions()
 
 void ScoutMonitor::HandleResizing()
 {
-    mvwin(body_info_win_, bi_origin_y_, bi_origin_x_);
-    mvwin(system_info_win_, si_origin_y_, si_origin_x_);
+    delwin(body_info_win_);
+    delwin(system_info_win_);
+
+    body_info_win_ = newwin(bi_win_sy_, bi_win_sx_, bi_origin_y_, bi_origin_x_);
+    system_info_win_ = newwin(si_win_sy_, si_win_sx_, si_origin_y_, si_origin_x_);
+
     resizing_detected_ = false;
+}
+
+void ScoutMonitor::ClearAll()
+{
+    wclear(body_info_win_);
+    wclear(system_info_win_);
+}
+
+void ScoutMonitor::DrawVehicle(int y, int x)
+{
+    // draw linear velocity
+    const int linear_axis_x = x + vehicle_fp_offset_x_;
+    const int linear_axis_tip_y = y + 2;
+    const int linear_axis_origin_y = linear_axis_tip_y + linear_axis_length_;
+    const int linear_axis_negative_y = linear_axis_origin_y + linear_axis_length_ + 1;
+    mvwprintw(body_info_win_, linear_axis_tip_y - 1, linear_axis_x, "^");
+    for (int i = linear_axis_tip_y; i < linear_axis_origin_y; ++i)
+        mvwprintw(body_info_win_, i, linear_axis_x, "-");
+    mvwprintw(body_info_win_, linear_axis_origin_y, linear_axis_x, "x");
+    for (int i = linear_axis_origin_y + 1; i < linear_axis_negative_y; ++i)
+        mvwprintw(body_info_win_, i, linear_axis_x, "-");
+    mvwprintw(body_info_win_, linear_axis_negative_y, linear_axis_x, "v");
+
+    // draw angular velocity
+    const int angular_axis_y = linear_axis_origin_y;
+    const int angular_axis_origin_x = linear_axis_x;
+    const int angular_axis_positive_x = angular_axis_origin_x + angular_axis_length_ + 1;
+    const int angular_axis_negative_x = angular_axis_origin_x - angular_axis_length_;
+    mvwprintw(body_info_win_, angular_axis_y, angular_axis_negative_x - 1, "<");
+    for (int i = angular_axis_negative_x; i < angular_axis_origin_x; ++i)
+        mvwprintw(body_info_win_, angular_axis_y, i, "-");
+    mvwprintw(body_info_win_, linear_axis_origin_y, linear_axis_x, "x");
+    for (int i = angular_axis_origin_x + 1; i < angular_axis_positive_x; ++i)
+        mvwprintw(body_info_win_, angular_axis_y, i, "-");
+    mvwprintw(body_info_win_, angular_axis_y, angular_axis_positive_x, ">");
+
+    // draw velocity
+    double linear_vel = 1.234;
+    std::string linear_vel_str = " linear: " + ConvertVelocityToString(linear_vel);
+    mvwprintw(body_info_win_, linear_axis_negative_y + 2, angular_axis_negative_x - 1, linear_vel_str.c_str());
+
+    double angular_vel = 0.123;
+    std::string angular_vel_str = "angular: " + ConvertVelocityToString(angular_vel);
+    mvwprintw(body_info_win_, linear_axis_negative_y + 3, angular_axis_negative_x - 1, angular_vel_str.c_str());
+
+    // draw vehicle footprint
+    for (int i = linear_axis_tip_y - 2; i < linear_axis_negative_y + 5; ++i)
+    {
+        mvwprintw(body_info_win_, i, angular_axis_negative_x - 4, "|");
+        mvwprintw(body_info_win_, i, angular_axis_positive_x + 3, "|");
+    }
+    for (int i = angular_axis_negative_x - 4; i < angular_axis_positive_x + 4; ++i)
+    {
+        mvwprintw(body_info_win_, linear_axis_tip_y - 2, i, "-");
+        mvwprintw(body_info_win_, linear_axis_negative_y + 4, i, "-");
+    }
 }
 
 void ScoutMonitor::UpdateScoutBodyInfo()
 {
-    wclear(body_info_win_);
-
+    // static int32_t count = 0;
     // std::string display_str = "scout body info win (y,x): " + std::to_string(bi_win_sy_) + " " + std::to_string(bi_win_sx_);
-    std::string display_str = "bi (y,x): " + std::to_string(bi_win_sy_) + " " + std::to_string(bi_win_sx_) + " ; si (y,x): " + std::to_string(si_win_sy_) + " " + std::to_string(si_win_sx_);
-    mvwprintw(body_info_win_, 0, 0, display_str.c_str());
+    // std::string display_str = "bi (y,x): " + std::to_string(bi_win_sy_) + " " + std::to_string(bi_win_sx_) + " ; si (y,x): " + std::to_string(si_win_sy_) + " " + std::to_string(si_win_sx_);
+    // mvwprintw(body_info_win_, 0, 0, display_str.c_str());
 
-    std::string display_str2 = "bio (y,x): " + std::to_string(bi_origin_y_) + " " + std::to_string(bi_origin_x_) + " ; sio (y,x): " + std::to_string(si_origin_y_) + " " + std::to_string(si_origin_x_);
-    mvwprintw(body_info_win_, 1, 0, display_str2.c_str());
+    // for (int i = 0; i < 10; ++i)
+    //     mvwprintw(body_info_win_, 0, i, std::to_string(i).c_str());
+    // for (int i = 0; i < 10; ++i)
+    //     mvwprintw(body_info_win_, 0, i + 10, std::to_string(i).c_str());
+    // for (int i = 0; i < 10; ++i)
+    //     mvwprintw(body_info_win_, 0, i + 20, std::to_string(i).c_str());
+    // for (int i = 0; i < 10; ++i)
+    //     mvwprintw(body_info_win_, 0, i + 30, std::to_string(i).c_str());
 
-    std::string display_str3 = "term (y,x): " + std::to_string(term_sy_) + " " + std::to_string(term_sx_);
-    mvwprintw(body_info_win_, 2, 0, display_str3.c_str());
+    // for (int i = 0; i < 10; ++i)
+    //     mvwprintw(body_info_win_, i, 0, std::to_string(i).c_str());
+    // for (int i = 0; i < 10; ++i)
+    //     mvwprintw(body_info_win_, i + 10, 0, std::to_string(i).c_str());
 
-    int x, y, i;
+    // std::string display_str2 = "bio (y,x): " + std::to_string(bi_origin_y_) + " " + std::to_string(bi_origin_x_) + " ; sio (y,x): " + std::to_string(si_origin_y_) + " " + std::to_string(si_origin_x_);
+    // mvwprintw(body_info_win_, 1, 0, display_str2.c_str());
+    // mvwprintw(body_info_win_, 1, 1, std::to_string(count++).c_str());
 
-    // 4 corners
-    // mvwprintw(body_info_win_, 0, 0, "+");
-    // mvwprintw(body_info_win_, y - 1, 0, "+");
-    // mvwprintw(body_info_win_, 0, x - 1, "+");
-    // mvwprintw(body_info_win_, y - 1, x - 1, "+");
+    // std::string display_str3 = "term (y,x): " + std::to_string(term_sy_) + " " + std::to_string(term_sx_);
+    // mvwprintw(body_info_win_, 2, 1, display_str3.c_str());
 
-    // sides for (i = 1; i < (y - 1); i++) { mvwprintw(screen, i, 0, "|"); mvwprintw(screen, i, x - 1, "|"); } // top and bottom for (i = 1; i < (x - 1); i++) { mvwprintw(screen, 0, i, "-"); mvwprintw(screen, y - 1, i, "-"); }
+    for (int i = 0; i < bi_win_sy_; i++)
+        mvwprintw(body_info_win_, i, bi_win_sx_ - 1, "|");
+
+    DrawVehicle(bi_win_sy_ / 2 - vehicle_fp_offset_y_, bi_win_sx_ / 2 - vehicle_fp_offset_x_);
+    // DrawVehicle(0, 0);
 
     wrefresh(body_info_win_);
 }
 
 void ScoutMonitor::UpdateScoutSystemInfo()
 {
-    wclear(system_info_win_);
-
     // mvwprintw(system_info_win_, 0, 0, "12345678901234567890 - system info");
-
     std::string display_str = "scout system info win (y,x): " + std::to_string(si_win_sy_) + " " + std::to_string(si_win_sx_);
     mvwprintw(system_info_win_, 0, 0, display_str.c_str());
 

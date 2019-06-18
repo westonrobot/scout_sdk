@@ -43,12 +43,21 @@ private:
 
     WINDOW *scout_cmd_win_;
 
+    const int linear_axis_length_ = 5;
+    const int angular_axis_length_ = 5;
+
+    const int vehicle_fp_offset_x_ = 9;
+    const int vehicle_fp_offset_y_ = 9;
+
     bool resizing_detected_;
 
     void UpdateAll();
+    void ClearAll();
 
-    void CheckWindowDimensions();
+    void CalcDimensions();
     void HandleResizing();
+
+    void DrawVehicle(int y, int x);
 
     void UpdateScoutBodyInfo();
     void UpdateScoutSystemInfo();
