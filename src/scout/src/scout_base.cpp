@@ -83,11 +83,6 @@ ScoutBase::~ScoutBase()
         cmd_thread_.join();
 }
 
-void ScoutBase::ConnectSerialPort(const std::string &port_name, int32_t baud_rate)
-{
-    // serial_connected_ = (scout_serial::Open_Serial(port_name, baud_rate) > 0) ? true : false;
-}
-
 void ScoutBase::ConnectCANBus(const std::string &can_if_name)
 {
     can_if_ = std::make_shared<ASyncCAN>(can_if_name);
