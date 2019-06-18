@@ -13,7 +13,7 @@ $ sudo apt-get install -y \
      libboost-test-dev libboost-dev  libboost-program-options-dev \
      libboost-regex-dev libboost-signals-dev \
      libtinyxml-dev libboost-filesystem-dev libxml2-dev \
-     libgtest-dev
+     libgtest-dev libpoco-dev
 ```
 
 ```
