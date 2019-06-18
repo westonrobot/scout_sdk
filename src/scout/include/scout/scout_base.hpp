@@ -16,7 +16,6 @@
 #include <mutex>
 #include <functional>
 
-#include "stopwatch/stopwatch.h"
 #include "async_io/async_can.hpp"
 
 #include "scout/scout_state.hpp"
