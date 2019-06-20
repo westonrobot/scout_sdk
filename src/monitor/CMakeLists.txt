@@ -4,6 +4,7 @@ find_package(Curses REQUIRED)
 
 # Add libraries
 set(SCOUT_MONITOR_SRC
+    src/nshapes.cpp
     src/scout_monitor.cpp
 )
 add_library(monitor STATIC ${SCOUT_MONITOR_SRC})

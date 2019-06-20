@@ -35,6 +35,16 @@ $ sudo ./src/catkin/bin/catkin_make_isolated --install --install-space /opt/ros/
 $ source /opt/ros/melodic/setup.bash
 ```
 
+Additional runtime dependencies:
+
+```
+$ sudo apt install -y python-defusedxml python-netifaces
+```
+
+```
+$ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F42ED6FBAB17C654
+```
+
 Reference:
 
 * [1] https://machinekoder.com/ros-with-debian-stretch-on-the-beaglebone-black-green-blue/

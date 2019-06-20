@@ -28,6 +28,7 @@
 #include <iomanip>
 
 #include "stopwatch/stopwatch.h"
+#include "monitor/nshapes.hpp"
 
 namespace
 {
@@ -169,24 +170,26 @@ void ScoutMonitor::DrawVehicle(int y, int x)
 
     // draw velocity
     double linear_vel = 1.234;
-    std::string linear_vel_str = " linear: " + ConvertVelocityToString(linear_vel);
-    mvwprintw(body_info_win_, linear_axis_negative_y + 2, angular_axis_negative_x - 1, linear_vel_str.c_str());
+    std::string linear_vel_str = "linear : " + ConvertVelocityToString(linear_vel);
+    mvwprintw(body_info_win_, linear_axis_negative_y + 2, angular_axis_negative_x - 2, linear_vel_str.c_str());
 
     double angular_vel = 0.123;
     std::string angular_vel_str = "angular: " + ConvertVelocityToString(angular_vel);
-    mvwprintw(body_info_win_, linear_axis_negative_y + 3, angular_axis_negative_x - 1, angular_vel_str.c_str());
+    mvwprintw(body_info_win_, linear_axis_negative_y + 3, angular_axis_negative_x - 2, angular_vel_str.c_str());
 
-    // draw vehicle footprint
-    for (int i = linear_axis_tip_y - 2; i < linear_axis_negative_y + 5; ++i)
-    {
-        mvwprintw(body_info_win_, i, angular_axis_negative_x - 4, "|");
-        mvwprintw(body_info_win_, i, angular_axis_positive_x + 3, "|");
-    }
-    for (int i = angular_axis_negative_x - 4; i < angular_axis_positive_x + 4; ++i)
-    {
-        mvwprintw(body_info_win_, linear_axis_tip_y - 2, i, "-");
-        mvwprintw(body_info_win_, linear_axis_negative_y + 4, i, "-");
-    }
+    // draw vehicle base
+    NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 2, angular_axis_negative_x - 4,
+                           linear_axis_negative_y + 4, angular_axis_positive_x + 3);
+
+    // draw vehicle wheels
+    NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_negative_x - 9,
+                           linear_axis_tip_y + 4, angular_axis_negative_x - 5);
+    NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_negative_x - 9,
+                           linear_axis_negative_y + 3, angular_axis_negative_x - 5);
+    NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_positive_x + 4,
+                           linear_axis_tip_y + 4, angular_axis_positive_x + 8);
+    NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_positive_x + 4,
+                           linear_axis_negative_y + 3, angular_axis_positive_x + 8);
 }
 
 void ScoutMonitor::UpdateScoutBodyInfo()
