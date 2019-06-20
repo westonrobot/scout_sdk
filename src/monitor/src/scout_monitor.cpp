@@ -23,6 +23,7 @@
 
 #include "monitor/scout_monitor.hpp"
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -111,13 +112,13 @@ void ScoutMonitor::CalcDimensions()
         term_sy_ = sy;
         term_sx_ = sx;
 
-        bi_win_sy_ = term_sy_ * 3 / 4;
-        bi_win_sx_ = term_sx_ * 2 / 3;
+        bi_win_sy_ = term_sy_ - 3;
+        bi_win_sx_ = term_sx_ * 15 / 24;
         bi_origin_y_ = 0;
         bi_origin_x_ = 0;
 
-        si_win_sy_ = term_sy_ * 3 / 4;
-        si_win_sx_ = term_sx_ * 1 / 3;
+        si_win_sy_ = term_sy_;
+        si_win_sx_ = term_sx_ * 9 / 24;
         si_origin_y_ = 0;
         si_origin_x_ = bi_win_sx_;
     }
@@ -190,50 +191,60 @@ void ScoutMonitor::DrawVehicle(int y, int x)
                            linear_axis_tip_y + 4, angular_axis_positive_x + 8);
     NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_positive_x + 4,
                            linear_axis_negative_y + 3, angular_axis_positive_x + 8);
+
+    // draw vehicle lights
+    for (int i = angular_axis_origin_x - 5; i < angular_axis_origin_x - 1; ++i)
+        mvwprintw(body_info_win_, linear_axis_tip_y - 3, i, "\\");
+    mvwprintw(body_info_win_, linear_axis_tip_y - 3, angular_axis_origin_x, "|");
+    for (int i = angular_axis_origin_x + 2; i <= angular_axis_origin_x + 5; ++i)
+        mvwprintw(body_info_win_, linear_axis_tip_y - 3, i, "/");
+
+    for (int i = angular_axis_origin_x - 5; i < angular_axis_origin_x - 1; ++i)
+        mvwprintw(body_info_win_, linear_axis_negative_y + 5, i, "/");
+    mvwprintw(body_info_win_, linear_axis_negative_y + 5, angular_axis_origin_x, "|");
+    for (int i = angular_axis_origin_x + 2; i <= angular_axis_origin_x + 5; ++i)
+        mvwprintw(body_info_win_, linear_axis_negative_y + 5, i, "\\");
 }
 
 void ScoutMonitor::UpdateScoutBodyInfo()
 {
-    // static int32_t count = 0;
-    // std::string display_str = "scout body info win (y,x): " + std::to_string(bi_win_sy_) + " " + std::to_string(bi_win_sx_);
-    // std::string display_str = "bi (y,x): " + std::to_string(bi_win_sy_) + " " + std::to_string(bi_win_sx_) + " ; si (y,x): " + std::to_string(si_win_sy_) + " " + std::to_string(si_win_sx_);
-    // mvwprintw(body_info_win_, 0, 0, display_str.c_str());
-
-    // for (int i = 0; i < 10; ++i)
-    //     mvwprintw(body_info_win_, 0, i, std::to_string(i).c_str());
-    // for (int i = 0; i < 10; ++i)
-    //     mvwprintw(body_info_win_, 0, i + 10, std::to_string(i).c_str());
-    // for (int i = 0; i < 10; ++i)
-    //     mvwprintw(body_info_win_, 0, i + 20, std::to_string(i).c_str());
-    // for (int i = 0; i < 10; ++i)
-    //     mvwprintw(body_info_win_, 0, i + 30, std::to_string(i).c_str());
-
-    // for (int i = 0; i < 10; ++i)
-    //     mvwprintw(body_info_win_, i, 0, std::to_string(i).c_str());
-    // for (int i = 0; i < 10; ++i)
-    //     mvwprintw(body_info_win_, i + 10, 0, std::to_string(i).c_str());
-
-    // std::string display_str2 = "bio (y,x): " + std::to_string(bi_origin_y_) + " " + std::to_string(bi_origin_x_) + " ; sio (y,x): " + std::to_string(si_origin_y_) + " " + std::to_string(si_origin_x_);
-    // mvwprintw(body_info_win_, 1, 0, display_str2.c_str());
-    // mvwprintw(body_info_win_, 1, 1, std::to_string(count++).c_str());
-
-    // std::string display_str3 = "term (y,x): " + std::to_string(term_sy_) + " " + std::to_string(term_sx_);
-    // mvwprintw(body_info_win_, 2, 1, display_str3.c_str());
-
-    for (int i = 0; i < bi_win_sy_; i++)
-        mvwprintw(body_info_win_, i, bi_win_sx_ - 1, "|");
+    for (int i = 0; i < bi_win_sx_; i++)
+        mvwprintw(body_info_win_, bi_win_sy_ - 1, i, "-");
 
     DrawVehicle(bi_win_sy_ / 2 - vehicle_fp_offset_y_, bi_win_sx_ / 2 - vehicle_fp_offset_x_);
-    // DrawVehicle(0, 0);
 
     wrefresh(body_info_win_);
 }
 
 void ScoutMonitor::UpdateScoutSystemInfo()
 {
-    // mvwprintw(system_info_win_, 0, 0, "12345678901234567890 - system info");
-    std::string display_str = "scout system info win (y,x): " + std::to_string(si_win_sy_) + " " + std::to_string(si_win_sx_);
-    mvwprintw(system_info_win_, 0, 0, display_str.c_str());
+    for (int i = 0; i < si_win_sy_; i++)
+        mvwprintw(system_info_win_, i, 0, "|");
+
+    const int start_col = (si_win_sx_ - 24) / 2;
+    const int sec1 = static_cast<int>(std::round((si_win_sy_ - 20) / 2.0));
+    mvwprintw(system_info_win_, sec1, start_col, "System state     : NORMAL");
+    mvwprintw(system_info_win_, sec1 + 1, start_col, "Control mode     : CAN");
+    mvwprintw(system_info_win_, sec1 + 2, start_col, "Battery voltage  : 29v");
+
+    const int sec2 = sec1 + 4;
+    mvwprintw(system_info_win_, sec2, start_col, "System faults");
+    mvwprintw(system_info_win_, sec2 + 1, start_col, "-Drv over-current: N W P");
+    mvwprintw(system_info_win_, sec2 + 2, start_col, "-Mt over-heat    : N W P");
+    mvwprintw(system_info_win_, sec2 + 3, start_col, "-Bat under volt  : N W F");
+    mvwprintw(system_info_win_, sec2 + 4, start_col, "-Bat over volt   : N   F");
+
+    const int sec3 = sec2 + 6;
+    mvwprintw(system_info_win_, sec3, start_col, "Comm states");
+    mvwprintw(system_info_win_, sec3 + 1, start_col, "-CAN cmd error   : N   F");
+    mvwprintw(system_info_win_, sec3 + 2, start_col, "-Motor 1 comm    : N   F");
+    mvwprintw(system_info_win_, sec3 + 3, start_col, "-Motor 2 comm    : N   F");
+    mvwprintw(system_info_win_, sec3 + 4, start_col, "-Motor 3 comm    : N   F");
+    mvwprintw(system_info_win_, sec3 + 5, start_col, "-Motor 4 comm    : N   F");
+
+    const int sec4 = sec3 + 7;
+    mvwprintw(system_info_win_, sec4, start_col, " N: normal  W: warning");
+    mvwprintw(system_info_win_, sec4 + 1, start_col, " F: fault   P: protection");
 
     wrefresh(system_info_win_);
 }
