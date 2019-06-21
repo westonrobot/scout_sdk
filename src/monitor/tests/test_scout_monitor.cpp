@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sigIntHandler, NULL);
 
     std::cout << "scout monitor started" << std::endl;
-    monitor.Run();
+    monitor.Run("can1");
 
     return 0;
 }

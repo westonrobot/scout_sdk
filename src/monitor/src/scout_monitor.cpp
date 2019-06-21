@@ -359,6 +359,7 @@ void ScoutMonitor::UpdateScoutSystemInfo()
         mvwprintw(system_info_win_, sec1 + 1, state_value_col, "CAN");
     else if (scout_state_.control_mode == CMD_UART_MODE)
         mvwprintw(system_info_win_, sec1 + 1, state_value_col, "UART");
+    // mvwprintw(system_info_win_, sec1 + 1, state_value_col, std::to_string(scout_state_.control_mode).c_str());
 
     // battery voltage
     ShowStatusItemName(sec1 + 2, state_title_col, "Battery voltage");
