@@ -11,6 +11,7 @@
 #define SCOUT_MONITOR_HPP
 
 #include <ncurses.h>
+#include "scout/scout_state.hpp"
 
 namespace wescore
 {
@@ -43,6 +44,8 @@ private:
 
     WINDOW *scout_cmd_win_;
 
+    ScoutState scout_state_;
+
     const int linear_axis_length_ = 5;
     const int angular_axis_length_ = 5;
 
@@ -57,7 +60,10 @@ private:
     void CalcDimensions();
     void HandleResizing();
 
-    void DrawVehicle(int y, int x);
+    void ShowVehicleState(int y, int x);
+    void ShowStatusItemName(int y, int x, std::string name);
+    void ShowFault(int y, int x, bool no_fault);
+    void ShowMotorInfo(int y, int x, double cur, int rpm, int temp, bool is_right);
 
     void UpdateScoutBodyInfo();
     void UpdateScoutSystemInfo();

@@ -29,16 +29,18 @@
 #include <iomanip>
 
 #include "stopwatch/stopwatch.h"
+#include "scout/scout_can_protocol.h"
 #include "monitor/nshapes.hpp"
+#include "monitor/ncolors.hpp"
 
 namespace
 {
 // reference: https://thispointer.com/c-convert-double-to-string-and-manage-precision-scientific-notation/
-std::string ConvertVelocityToString(double vel)
+std::string ConvertFloatToString(double vel, int digit_num = 3)
 {
     std::ostringstream streamObj;
     streamObj << std::fixed;
-    streamObj << std::setprecision(3);
+    streamObj << std::setprecision(digit_num);
     streamObj << vel;
     return streamObj.str();
 }
@@ -63,6 +65,8 @@ ScoutMonitor::ScoutMonitor()
     // setup sub-windows
     body_info_win_ = newwin(bi_win_sy_, bi_win_sx_, bi_origin_y_, bi_origin_x_);
     system_info_win_ = newwin(si_win_sy_, si_win_sx_, si_origin_y_, si_origin_x_);
+
+    NColors::InitColors();
 }
 
 ScoutMonitor::~ScoutMonitor()
@@ -92,11 +96,33 @@ void ScoutMonitor::Run()
         // label starting point of iteration
         sw.tic();
 
+        // query for latest robot state
+        scout_state_.base_state = BASE_NORMAL;
+        scout_state_.battery_voltage = 28.5;
+
+        scout_state_.linear_velocity = 1.234;
+        scout_state_.angular_velocity = 5.678;
+
+        // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_W;
+        // scout_state_.fault_code |= MOTOR_OVERCURRENT_W;
+        // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_F;
+        // scout_state_.fault_code |= MOTOR_OVERCURRENT_F;
+        // scout_state_.fault_code |= BAT_UNDER_VOL_W;
+        // scout_state_.fault_code |= BAT_UNDER_VOL_F;
+        scout_state_.fault_code = 0x0000;
+        // scout_state_.fault_code = 0xffff;
+
+        // scout_state_.front_light_state.mode = CONST_ON;
+        scout_state_.front_light_state.mode = CUSTOM;
+        scout_state_.front_light_state.custom_value = 50;
+
+        scout_state_.rear_light_state.mode = CONST_ON;
+
         // update window contents
         UpdateAll();
 
         // manage window refresh rate
-        sw.sleep_until_ms(500);
+        sw.sleep_until_ms(100);
     }
 }
 
@@ -112,7 +138,7 @@ void ScoutMonitor::CalcDimensions()
         term_sy_ = sy;
         term_sx_ = sx;
 
-        bi_win_sy_ = term_sy_ - 3;
+        bi_win_sy_ = term_sy_;
         bi_win_sx_ = term_sx_ * 15 / 24;
         bi_origin_y_ = 0;
         bi_origin_x_ = 0;
@@ -141,9 +167,9 @@ void ScoutMonitor::ClearAll()
     wclear(system_info_win_);
 }
 
-void ScoutMonitor::DrawVehicle(int y, int x)
+void ScoutMonitor::ShowVehicleState(int y, int x)
 {
-    // draw linear velocity
+    // show linear velocity
     const int linear_axis_x = x + vehicle_fp_offset_x_;
     const int linear_axis_tip_y = y + 2;
     const int linear_axis_origin_y = linear_axis_tip_y + linear_axis_length_;
@@ -156,7 +182,7 @@ void ScoutMonitor::DrawVehicle(int y, int x)
         mvwprintw(body_info_win_, i, linear_axis_x, "-");
     mvwprintw(body_info_win_, linear_axis_negative_y, linear_axis_x, "v");
 
-    // draw angular velocity
+    // show angular velocity
     const int angular_axis_y = linear_axis_origin_y;
     const int angular_axis_origin_x = linear_axis_x;
     const int angular_axis_positive_x = angular_axis_origin_x + angular_axis_length_ + 1;
@@ -169,20 +195,18 @@ void ScoutMonitor::DrawVehicle(int y, int x)
         mvwprintw(body_info_win_, angular_axis_y, i, "-");
     mvwprintw(body_info_win_, angular_axis_y, angular_axis_positive_x, ">");
 
-    // draw velocity
-    double linear_vel = 1.234;
-    std::string linear_vel_str = "linear : " + ConvertVelocityToString(linear_vel);
+    // show velocity values
+    std::string linear_vel_str = "linear : " + ConvertFloatToString(scout_state_.linear_velocity);
     mvwprintw(body_info_win_, linear_axis_negative_y + 2, angular_axis_negative_x - 2, linear_vel_str.c_str());
 
-    double angular_vel = 0.123;
-    std::string angular_vel_str = "angular: " + ConvertVelocityToString(angular_vel);
+    std::string angular_vel_str = "angular: " + ConvertFloatToString(scout_state_.angular_velocity);
     mvwprintw(body_info_win_, linear_axis_negative_y + 3, angular_axis_negative_x - 2, angular_vel_str.c_str());
 
-    // draw vehicle base
+    // show vehicle base
     NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 2, angular_axis_negative_x - 4,
                            linear_axis_negative_y + 4, angular_axis_positive_x + 3);
 
-    // draw vehicle wheels
+    // show vehicle wheels
     NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_negative_x - 9,
                            linear_axis_tip_y + 4, angular_axis_negative_x - 5);
     NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_negative_x - 9,
@@ -192,26 +216,75 @@ void ScoutMonitor::DrawVehicle(int y, int x)
     NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_positive_x + 4,
                            linear_axis_negative_y + 3, angular_axis_positive_x + 8);
 
-    // draw vehicle lights
-    for (int i = angular_axis_origin_x - 5; i < angular_axis_origin_x - 1; ++i)
-        mvwprintw(body_info_win_, linear_axis_tip_y - 3, i, "\\");
-    mvwprintw(body_info_win_, linear_axis_tip_y - 3, angular_axis_origin_x, "|");
-    for (int i = angular_axis_origin_x + 2; i <= angular_axis_origin_x + 5; ++i)
-        mvwprintw(body_info_win_, linear_axis_tip_y - 3, i, "/");
+    // front right motor
+    ShowMotorInfo(linear_axis_tip_y - 1, angular_axis_positive_x + 4, scout_state_.motor_states[0].current,
+                  scout_state_.motor_states[0].rpm, scout_state_.motor_states[0].temperature, true);
+    // front left motor
+    ShowMotorInfo(linear_axis_tip_y - 1, angular_axis_negative_x - 9, scout_state_.motor_states[1].current,
+                  scout_state_.motor_states[1].rpm, scout_state_.motor_states[1].temperature, false);
+    // rear left motor
+    ShowMotorInfo(linear_axis_negative_y - 2, angular_axis_negative_x - 9, scout_state_.motor_states[2].current,
+                  scout_state_.motor_states[2].rpm, scout_state_.motor_states[2].temperature, false);
+    // rear right motor
+    ShowMotorInfo(linear_axis_negative_y - 2, angular_axis_positive_x + 4, scout_state_.motor_states[3].current,
+                  scout_state_.motor_states[3].rpm, scout_state_.motor_states[3].temperature, true);
 
-    for (int i = angular_axis_origin_x - 5; i < angular_axis_origin_x - 1; ++i)
-        mvwprintw(body_info_win_, linear_axis_negative_y + 5, i, "/");
-    mvwprintw(body_info_win_, linear_axis_negative_y + 5, angular_axis_origin_x, "|");
-    for (int i = angular_axis_origin_x + 2; i <= angular_axis_origin_x + 5; ++i)
-        mvwprintw(body_info_win_, linear_axis_negative_y + 5, i, "\\");
+    // show vehicle lights
+    std::string front_mode_str = "Mode: ";
+    if (scout_state_.front_light_state.mode == CONST_ON)
+        front_mode_str += "ON";
+    else if (scout_state_.front_light_state.mode == CONST_OFF)
+        front_mode_str += "OFF";
+    else if (scout_state_.front_light_state.mode == BREATH)
+        front_mode_str += "BREATH";
+    else if (scout_state_.front_light_state.mode == CUSTOM)
+        front_mode_str += "CUSTOM";
+    mvwprintw(body_info_win_, linear_axis_tip_y - 4, angular_axis_origin_x - 13, front_mode_str.c_str());
+    std::string front_custom_str = "Custom: " + ConvertFloatToString(scout_state_.front_light_state.custom_value, 0);
+    mvwprintw(body_info_win_, linear_axis_tip_y - 4, angular_axis_origin_x + 3, front_custom_str.c_str());
+    if (scout_state_.front_light_state.mode != CONST_OFF &&
+        !(scout_state_.front_light_state.mode == CUSTOM && scout_state_.front_light_state.custom_value == 0))
+    {
+        NColors::WSetColor(body_info_win_, NColors::BRIGHT_YELLOW);
+        for (int i = angular_axis_origin_x - 5; i < angular_axis_origin_x - 1; ++i)
+            mvwprintw(body_info_win_, linear_axis_tip_y - 3, i, "v");
+        mvwprintw(body_info_win_, linear_axis_tip_y - 3, angular_axis_origin_x, "v");
+        for (int i = angular_axis_origin_x + 2; i <= angular_axis_origin_x + 5; ++i)
+            mvwprintw(body_info_win_, linear_axis_tip_y - 3, i, "v");
+        NColors::WUnsetColor(body_info_win_, NColors::BRIGHT_YELLOW);
+    }
+
+    std::string rear_mode_str = "Mode: ";
+    if (scout_state_.rear_light_state.mode == CONST_ON)
+        rear_mode_str += "ON";
+    else if (scout_state_.rear_light_state.mode == CONST_OFF)
+        rear_mode_str += "OFF";
+    else if (scout_state_.rear_light_state.mode == BREATH)
+        rear_mode_str += "BREATH";
+    else if (scout_state_.rear_light_state.mode == CUSTOM)
+        rear_mode_str += "CUSTOM";
+    mvwprintw(body_info_win_, linear_axis_negative_y + 6, angular_axis_origin_x - 13, rear_mode_str.c_str());
+    std::string rear_custom_str = "Custom: " + ConvertFloatToString(scout_state_.rear_light_state.custom_value, 0);
+    mvwprintw(body_info_win_, linear_axis_negative_y + 6, angular_axis_origin_x + 3, rear_custom_str.c_str());
+    if (scout_state_.rear_light_state.mode != CONST_OFF &&
+        !(scout_state_.rear_light_state.mode == CUSTOM && scout_state_.rear_light_state.custom_value == 0))
+    {
+        NColors::WSetColor(body_info_win_, NColors::BRIGHT_RED);
+        for (int i = angular_axis_origin_x - 5; i < angular_axis_origin_x - 1; ++i)
+            mvwprintw(body_info_win_, linear_axis_negative_y + 5, i, "^");
+        mvwprintw(body_info_win_, linear_axis_negative_y + 5, angular_axis_origin_x, "^");
+        for (int i = angular_axis_origin_x + 2; i <= angular_axis_origin_x + 5; ++i)
+            mvwprintw(body_info_win_, linear_axis_negative_y + 5, i, "^");
+        NColors::WUnsetColor(body_info_win_, NColors::BRIGHT_RED);
+    }
 }
 
 void ScoutMonitor::UpdateScoutBodyInfo()
 {
-    for (int i = 0; i < bi_win_sx_; i++)
-        mvwprintw(body_info_win_, bi_win_sy_ - 1, i, "-");
+    // for (int i = 0; i < bi_win_sx_; i++)
+    //     mvwprintw(body_info_win_, bi_win_sy_ - 1, i, "-");
 
-    DrawVehicle(bi_win_sy_ / 2 - vehicle_fp_offset_y_, bi_win_sx_ / 2 - vehicle_fp_offset_x_);
+    ShowVehicleState(bi_win_sy_ / 2 - vehicle_fp_offset_y_, bi_win_sx_ / 2 - vehicle_fp_offset_x_);
 
     wrefresh(body_info_win_);
 }
@@ -221,31 +294,214 @@ void ScoutMonitor::UpdateScoutSystemInfo()
     for (int i = 0; i < si_win_sy_; i++)
         mvwprintw(system_info_win_, i, 0, "|");
 
-    const int start_col = (si_win_sx_ - 24) / 2;
+    const int state_title_col = (si_win_sx_ - 24) / 2;
+    const int state_value_col = state_title_col + 20;
+    const int state_div_col = state_value_col - 2;
+
+    // system state
     const int sec1 = static_cast<int>(std::round((si_win_sy_ - 20) / 2.0));
-    mvwprintw(system_info_win_, sec1, start_col, "System state     : NORMAL");
-    mvwprintw(system_info_win_, sec1 + 1, start_col, "Control mode     : CAN");
-    mvwprintw(system_info_win_, sec1 + 2, start_col, "Battery voltage  : 29v");
+    ShowStatusItemName(sec1, state_title_col, "System state");
+
+    if (scout_state_.base_state == BASE_NORMAL)
+    {
+        NColors::WSetColor(system_info_win_, NColors::GREEN);
+        mvwprintw(system_info_win_, sec1, state_value_col, "NORMAL");
+        NColors::WUnsetColor(system_info_win_, NColors::GREEN);
+    }
+    else if (scout_state_.base_state == BASE_ESTOP)
+    {
+        NColors::WSetColor(system_info_win_, NColors::YELLOW);
+        mvwprintw(system_info_win_, sec1, state_value_col, "ESTOP");
+        NColors::WUnsetColor(system_info_win_, NColors::YELLOW);
+    }
+    else if (scout_state_.base_state == BASE_EXCEPTION)
+    {
+        NColors::WSetColor(system_info_win_, NColors::RED);
+        mvwprintw(system_info_win_, sec1, state_value_col, "EXCEPT");
+        NColors::WUnsetColor(system_info_win_, NColors::RED);
+    }
+
+    // control mode
+    ShowStatusItemName(sec1 + 1, state_title_col, "Control mode");
+    if (scout_state_.control_mode == REMOTE_MODE)
+        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "REMOTE");
+    else if (scout_state_.control_mode == CMD_CAN_MODE)
+        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "CAN");
+    else if (scout_state_.control_mode == CMD_UART_MODE)
+        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "UART");
+
+    // battery voltage
+    ShowStatusItemName(sec1 + 2, state_title_col, "Battery voltage");
+    std::string bat_vol_str = ConvertFloatToString(scout_state_.battery_voltage, 1) + " v";
+    mvwprintw(system_info_win_, sec1 + 2, state_value_col, bat_vol_str.c_str());
+
+    const int fault_col_1 = state_value_col;
+    const int fault_col_2 = fault_col_1 + 2;
+    const int fault_col_3 = fault_col_2 + 2;
 
     const int sec2 = sec1 + 4;
-    mvwprintw(system_info_win_, sec2, start_col, "System faults");
-    mvwprintw(system_info_win_, sec2 + 1, start_col, "-Drv over-current: N W P");
-    mvwprintw(system_info_win_, sec2 + 2, start_col, "-Mt over-heat    : N W P");
-    mvwprintw(system_info_win_, sec2 + 3, start_col, "-Bat under volt  : N W F");
-    mvwprintw(system_info_win_, sec2 + 4, start_col, "-Bat over volt   : N   F");
+    mvwprintw(system_info_win_, sec2, state_title_col, "System faults");
+
+    // motor driver over heat;
+    ShowStatusItemName(sec2 + 1, state_title_col, "-Drv over-heat");
+    if ((scout_state_.fault_code & MOTOR_DRV_OVERHEAT_W) == 0 &&
+        (scout_state_.fault_code & MOTOR_DRV_OVERHEAT_F) == 0)
+    {
+        NColors::WSetColor(system_info_win_, NColors::GREEN);
+        mvwprintw(system_info_win_, sec2 + 1, fault_col_1, "N");
+        NColors::WUnsetColor(system_info_win_, NColors::GREEN);
+    }
+    else
+    {
+        if (scout_state_.fault_code & MOTOR_DRV_OVERHEAT_W)
+        {
+            NColors::WSetColor(system_info_win_, NColors::YELLOW);
+            mvwprintw(system_info_win_, sec2 + 1, fault_col_2, "W");
+            NColors::WUnsetColor(system_info_win_, NColors::YELLOW);
+        }
+        if (scout_state_.fault_code & MOTOR_DRV_OVERHEAT_F)
+        {
+            NColors::WSetColor(system_info_win_, NColors::RED);
+            mvwprintw(system_info_win_, sec2 + 1, fault_col_3, "P");
+            NColors::WUnsetColor(system_info_win_, NColors::RED);
+        }
+    }
+
+    // motor driver over current
+    ShowStatusItemName(sec2 + 2, state_title_col, "-Mt over-current");
+    if ((scout_state_.fault_code & MOTOR_OVERCURRENT_W) == 0 &&
+        (scout_state_.fault_code & MOTOR_OVERCURRENT_F) == 0)
+    {
+        NColors::WSetColor(system_info_win_, NColors::GREEN);
+        mvwprintw(system_info_win_, sec2 + 2, fault_col_1, "N");
+        NColors::WUnsetColor(system_info_win_, NColors::GREEN);
+    }
+    else
+    {
+        if (scout_state_.fault_code & MOTOR_OVERCURRENT_W)
+        {
+            NColors::WSetColor(system_info_win_, NColors::YELLOW);
+            mvwprintw(system_info_win_, sec2 + 2, fault_col_2, "W");
+            NColors::WUnsetColor(system_info_win_, NColors::YELLOW);
+        }
+        if (scout_state_.fault_code & MOTOR_OVERCURRENT_F)
+        {
+            NColors::WSetColor(system_info_win_, NColors::RED);
+            mvwprintw(system_info_win_, sec2 + 2, fault_col_3, "P");
+            NColors::WUnsetColor(system_info_win_, NColors::RED);
+        }
+    }
+
+    // battery under voltage
+    ShowStatusItemName(sec2 + 3, state_title_col, "-Bat under volt");
+    if ((scout_state_.fault_code & BAT_UNDER_VOL_W) == 0 &&
+        (scout_state_.fault_code & BAT_UNDER_VOL_F) == 0)
+    {
+        NColors::WSetColor(system_info_win_, NColors::GREEN);
+        mvwprintw(system_info_win_, sec2 + 3, fault_col_1, "N");
+        NColors::WUnsetColor(system_info_win_, NColors::GREEN);
+    }
+    else
+    {
+        if (scout_state_.fault_code & BAT_UNDER_VOL_W)
+        {
+            NColors::WSetColor(system_info_win_, NColors::YELLOW);
+            mvwprintw(system_info_win_, sec2 + 3, fault_col_2, "W");
+            NColors::WUnsetColor(system_info_win_, NColors::YELLOW);
+        }
+        if (scout_state_.fault_code & BAT_UNDER_VOL_F)
+        {
+            NColors::WSetColor(system_info_win_, NColors::RED);
+            mvwprintw(system_info_win_, sec2 + 3, fault_col_3, "F");
+            NColors::WUnsetColor(system_info_win_, NColors::RED);
+        }
+    }
+
+    // battery over voltage
+    ShowStatusItemName(sec2 + 4, state_title_col, "-Bat over volt");
+    ShowFault(sec2 + 4, fault_col_1, (scout_state_.fault_code & BAT_OVER_VOL_F) == 0);
 
     const int sec3 = sec2 + 6;
-    mvwprintw(system_info_win_, sec3, start_col, "Comm states");
-    mvwprintw(system_info_win_, sec3 + 1, start_col, "-CAN cmd error   : N   F");
-    mvwprintw(system_info_win_, sec3 + 2, start_col, "-Motor 1 comm    : N   F");
-    mvwprintw(system_info_win_, sec3 + 3, start_col, "-Motor 2 comm    : N   F");
-    mvwprintw(system_info_win_, sec3 + 4, start_col, "-Motor 3 comm    : N   F");
-    mvwprintw(system_info_win_, sec3 + 5, start_col, "-Motor 4 comm    : N   F");
+    mvwprintw(system_info_win_, sec3, state_title_col, "Comm faults");
 
-    const int sec4 = sec3 + 7;
-    mvwprintw(system_info_win_, sec4, start_col, " N: normal  W: warning");
-    mvwprintw(system_info_win_, sec4 + 1, start_col, " F: fault   P: protection");
+    // CAN cmd checksum
+    ShowStatusItemName(sec3 + 1, state_title_col, "-CAN cmd checksum");
+    ShowFault(sec3 + 1, fault_col_1, (scout_state_.fault_code & CAN_CHECKSUM_ERROR) == 0);
+
+    // motor comm
+    ShowStatusItemName(sec3 + 2, state_title_col, "-Motor 1 comm");
+    ShowFault(sec3 + 2, fault_col_1, (scout_state_.fault_code & MOTOR1_COMM_F) == 0);
+
+    ShowStatusItemName(sec3 + 3, state_title_col, "-Motor 2 comm");
+    ShowFault(sec3 + 3, fault_col_1, (scout_state_.fault_code & MOTOR2_COMM_F) == 0);
+
+    ShowStatusItemName(sec3 + 4, state_title_col, "-Motor 3 comm");
+    ShowFault(sec3 + 4, fault_col_1, (scout_state_.fault_code & MOTOR3_COMM_F) == 0);
+
+    ShowStatusItemName(sec3 + 5, state_title_col, "-Motor 4 comm");
+    ShowFault(sec3 + 5, fault_col_1, (scout_state_.fault_code & MOTOR4_COMM_F) == 0);
+
+    const int sec4 = sec3 + 8;
+    NColors::WSetColor(system_info_win_, NColors::GREEN);
+    mvwprintw(system_info_win_, sec4, state_title_col + 1, "N: normal");
+    NColors::WUnsetColor(system_info_win_, NColors::GREEN);
+
+    NColors::WSetColor(system_info_win_, NColors::YELLOW);
+    mvwprintw(system_info_win_, sec4, state_title_col + 12, "W: warning");
+    NColors::WUnsetColor(system_info_win_, NColors::YELLOW);
+
+    NColors::WSetColor(system_info_win_, NColors::RED);
+    mvwprintw(system_info_win_, sec4 + 1, state_title_col + 1, "F: fault   P: protection");
+    NColors::WUnsetColor(system_info_win_, NColors::RED);
 
     wrefresh(system_info_win_);
+}
+
+void ScoutMonitor::ShowStatusItemName(int y, int x, std::string name)
+{
+    const int state_value_col = x + 20;
+    const int state_div_col = state_value_col - 2;
+
+    mvwprintw(system_info_win_, y, x, name.c_str());
+    mvwprintw(system_info_win_, y, state_div_col, ":");
+}
+
+void ScoutMonitor::ShowFault(int y, int x, bool no_fault)
+{
+    const int fault_col_1 = x;
+    const int fault_col_2 = x + 2;
+    const int fault_col_3 = fault_col_2 + 2;
+
+    if (no_fault)
+    {
+        NColors::WSetColor(system_info_win_, NColors::GREEN);
+        mvwprintw(system_info_win_, y, fault_col_1, "N");
+        NColors::WUnsetColor(system_info_win_, NColors::GREEN);
+    }
+    else
+    {
+        NColors::WSetColor(system_info_win_, NColors::RED);
+        mvwprintw(system_info_win_, y, fault_col_3, "F");
+        NColors::WUnsetColor(system_info_win_, NColors::RED);
+    }
+}
+
+// (y,x): position of the top left point of corresponding wheel
+void ScoutMonitor::ShowMotorInfo(int y, int x, double cur, int rpm, int temp, bool is_right)
+{
+    int col_title = x;
+    if (is_right)
+        col_title += 6;
+    else
+        col_title -= 9;
+
+    std::string cur_str = "CUR:" + ConvertFloatToString(cur, 1);
+    mvwprintw(body_info_win_, y + 1, col_title, cur_str.c_str());
+
+    std::string rpm_str = "RPM:" + ConvertFloatToString(rpm, 0);
+    mvwprintw(body_info_win_, y + 2, col_title, rpm_str.c_str());
+
+    std::string temp_str = "TMP:" + ConvertFloatToString(temp, 0);
+    mvwprintw(body_info_win_, y + 3, col_title, temp_str.c_str());
 }
 } // namespace wescore

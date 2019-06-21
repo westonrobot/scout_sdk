@@ -108,7 +108,7 @@ void ScoutBase::ControlLoop(int32_t period_ms)
         {
             MotionControlMessage m_msg;
 
-            m_msg.data.cmd.control_mode = CMD_MODE;
+            m_msg.data.cmd.control_mode = CMD_CAN_MODE;
 
             motion_cmd_mutex_.lock();
             m_msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);

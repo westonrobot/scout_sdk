@@ -44,7 +44,8 @@ static uint8_t Agilex_CANMsgChecksum(uint16_t id, uint8_t *data, uint8_t dlc)
 enum ControlMode
 {
     REMOTE_MODE = 0x00,
-    CMD_MODE = 0x01
+    CMD_CAN_MODE = 0x01,
+    CMD_UART_MODE = 0x02
 };
 
 enum FaultClearFlag
@@ -172,6 +173,23 @@ enum BaseState
     BASE_NORMAL,
     BASE_ESTOP,
     BASE_EXCEPTION
+};
+
+enum FaultBits
+{
+    CAN_CHECKSUM_ERROR = 0x0100,
+    MOTOR_DRV_OVERHEAT_W = 0x0200,
+    MOTOR_OVERCURRENT_W = 0x0400,
+    BAT_UNDER_VOL_W = 0x0800,
+
+    BAT_UNDER_VOL_F = 0x01,
+    BAT_OVER_VOL_F = 0x02,
+    MOTOR1_COMM_F = 0x04,
+    MOTOR2_COMM_F = 0x08,
+    MOTOR3_COMM_F = 0x10,
+    MOTOR4_COMM_F = 0x20,
+    MOTOR_DRV_OVERHEAT_F = 0x40,
+    MOTOR_OVERCURRENT_F = 0x80
 };
 
 typedef struct

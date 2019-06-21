@@ -12,7 +12,7 @@ void print_msg(uint8_t data[8])
 int main()
 {
     MotionControlMessage msg;
-    msg.data.cmd.control_mode = CMD_MODE;
+    msg.data.cmd.control_mode = CMD_CAN_MODE;
     msg.data.cmd.fault_clear_flag = NO_FAULT;
     msg.data.cmd.linear_velocity_cmd = 10;
     msg.data.cmd.angular_velocity_cmd = 0;

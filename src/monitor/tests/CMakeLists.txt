@@ -7,3 +7,6 @@ target_link_libraries(test_ncurses monitor)
 
 add_executable(test_ncolor test_ncolor.c)
 target_link_libraries(test_ncolor monitor)
+
+add_executable(test_ncolor2 test_ncolor2.cpp)
+target_link_libraries(test_ncolor2 monitor)
