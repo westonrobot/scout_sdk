@@ -88,8 +88,56 @@ void ScoutMonitor::UpdateAll()
     UpdateScoutSystemInfo();
 }
 
-void ScoutMonitor::Run()
+void ScoutMonitor::SetTestStateData()
 {
+    scout_state_.base_state = BASE_NORMAL;
+    scout_state_.battery_voltage = 28.5;
+
+    scout_state_.linear_velocity = 1.234;
+    scout_state_.angular_velocity = 5.678;
+
+    // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_W;
+    // scout_state_.fault_code |= MOTOR_OVERCURRENT_W;
+    // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_F;
+    // scout_state_.fault_code |= MOTOR_OVERCURRENT_F;
+    // scout_state_.fault_code |= BAT_UNDER_VOL_W;
+    // scout_state_.fault_code |= BAT_UNDER_VOL_F;
+    scout_state_.fault_code = 0x0000;
+    // scout_state_.fault_code = 0xffff;
+
+    // scout_state_.front_light_state.mode = CONST_ON;
+    scout_state_.front_light_state.mode = CUSTOM;
+    scout_state_.front_light_state.custom_value = 50;
+
+    scout_state_.rear_light_state.mode = CONST_ON;
+
+    scout_state_.motor_states[0].current = 10.1;
+    scout_state_.motor_states[0].rpm = 2000;
+    scout_state_.motor_states[0].temperature = 35;
+
+    scout_state_.motor_states[1].current = 10.1;
+    scout_state_.motor_states[1].rpm = 2000;
+    scout_state_.motor_states[1].temperature = 35;
+
+    scout_state_.motor_states[2].current = 10.1;
+    scout_state_.motor_states[2].rpm = 2000;
+    scout_state_.motor_states[2].temperature = 35;
+
+    scout_state_.motor_states[3].current = 10.1;
+    scout_state_.motor_states[3].rpm = 2000;
+    scout_state_.motor_states[3].temperature = 35;
+}
+
+void ScoutMonitor::Run(std::string device_name)
+{
+    if(device_name != "")
+        test_mode_ = false;
+
+    if (test_mode_)
+        SetTestStateData();
+    else
+        scout_base_.ConnectCANBus(device_name);
+
     stopwatch::StopWatch sw;
     while (keep_running_)
     {
@@ -97,26 +145,8 @@ void ScoutMonitor::Run()
         sw.tic();
 
         // query for latest robot state
-        scout_state_.base_state = BASE_NORMAL;
-        scout_state_.battery_voltage = 28.5;
-
-        scout_state_.linear_velocity = 1.234;
-        scout_state_.angular_velocity = 5.678;
-
-        // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_W;
-        // scout_state_.fault_code |= MOTOR_OVERCURRENT_W;
-        // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_F;
-        // scout_state_.fault_code |= MOTOR_OVERCURRENT_F;
-        // scout_state_.fault_code |= BAT_UNDER_VOL_W;
-        // scout_state_.fault_code |= BAT_UNDER_VOL_F;
-        scout_state_.fault_code = 0x0000;
-        // scout_state_.fault_code = 0xffff;
-
-        // scout_state_.front_light_state.mode = CONST_ON;
-        scout_state_.front_light_state.mode = CUSTOM;
-        scout_state_.front_light_state.custom_value = 50;
-
-        scout_state_.rear_light_state.mode = CONST_ON;
+        if (!test_mode_)
+            scout_state_ = scout_base_.GetScoutState();
 
         // update window contents
         UpdateAll();

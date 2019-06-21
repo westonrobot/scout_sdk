@@ -10,8 +10,10 @@
 #ifndef SCOUT_MONITOR_HPP
 #define SCOUT_MONITOR_HPP
 
-#include <ncurses.h>
+#include "scout/scout_base.hpp"
 #include "scout/scout_state.hpp"
+
+#include <ncurses.h>
 
 namespace wescore
 {
@@ -21,11 +23,12 @@ public:
     ScoutMonitor();
     ~ScoutMonitor();
 
-    void Run();
+    void Run(std::string device_name = "");
     void Terminate() { keep_running_ = false; }
 
 private:
     bool keep_running_ = true;
+    bool test_mode_ = true;
 
     int term_sx_ = -1;
     int term_sy_ = -1;
@@ -44,6 +47,7 @@ private:
 
     WINDOW *scout_cmd_win_;
 
+    ScoutBase scout_base_;
     ScoutState scout_state_;
 
     const int linear_axis_length_ = 5;
@@ -60,6 +64,7 @@ private:
     void CalcDimensions();
     void HandleResizing();
 
+    void SetTestStateData();
     void ShowVehicleState(int y, int x);
     void ShowStatusItemName(int y, int x, std::string name);
     void ShowFault(int y, int x, bool no_fault);
