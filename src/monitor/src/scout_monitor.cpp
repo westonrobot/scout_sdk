@@ -214,7 +214,9 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
     mvwprintw(body_info_win_, linear_axis_negative_y, linear_axis_x, "v");
     double linear_percentage = scout_state_.linear_velocity / ScoutMotionCmd::max_linear_velocity;
     int linear_bars = std::abs(static_cast<int>(linear_percentage * 5)) + 1;
-    if(linear_bars > 5)
+    if (scout_state_.linear_velocity < 0.001)
+        linear_bars = 0;
+    if (linear_bars > 5)
         linear_bars = 5;
     if (scout_state_.linear_velocity > 0)
     {
@@ -250,7 +252,9 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
 
     double angular_percentage = scout_state_.angular_velocity / ScoutMotionCmd::max_angular_velocity;
     int angular_bars = std::abs(static_cast<int>(angular_percentage * 5)) + 1;
-    if(angular_bars > 5)
+    if (std::abs(scout_state_.angular_velocity) < 0.001)
+        angular_bars = 0;
+    if (angular_bars > 5)
         angular_bars = 5;
     if (scout_state_.angular_velocity < 0)
     {
