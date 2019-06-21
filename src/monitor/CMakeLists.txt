@@ -9,12 +9,14 @@ set(SCOUT_MONITOR_SRC
     src/scout_monitor.cpp
 )
 add_library(monitor STATIC ${SCOUT_MONITOR_SRC})
-target_link_libraries(monitor scoutbase stopwatch ${CURSES_LIBRARIES} -lpanel)
+target_link_libraries(monitor scoutbase stopwatch ${CURSES_LIBRARIES})
 target_include_directories(monitor PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
 	$<INSTALL_INTERFACE:include>
 	PRIVATE src)
+
+add_subdirectory(app)
 
 # Add executables
 if(BUILD_TESTS)
