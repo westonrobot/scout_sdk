@@ -213,7 +213,9 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
         mvwprintw(body_info_win_, i, linear_axis_x, "-");
     mvwprintw(body_info_win_, linear_axis_negative_y, linear_axis_x, "v");
     double linear_percentage = scout_state_.linear_velocity / ScoutMotionCmd::max_linear_velocity;
-    int linear_bars = std::abs(static_cast<int>(linear_percentage * 5));
+    int linear_bars = std::abs(static_cast<int>(linear_percentage * 5)) + 1;
+    if(linear_bars > 5)
+        linear_bars = 5;
     if (scout_state_.linear_velocity > 0)
     {
         for (int i = linear_axis_origin_y - linear_bars; i < linear_axis_origin_y; ++i)
@@ -247,8 +249,10 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
     mvwprintw(body_info_win_, angular_axis_y, angular_axis_positive_x, ">");
 
     double angular_percentage = scout_state_.angular_velocity / ScoutMotionCmd::max_angular_velocity;
-    int angular_bars = std::abs(static_cast<int>(angular_percentage * 5));
-    if (scout_state_.angular_velocity > 0)
+    int angular_bars = std::abs(static_cast<int>(angular_percentage * 5)) + 1;
+    if(angular_bars > 5)
+        angular_bars = 5;
+    if (scout_state_.angular_velocity < 0)
     {
         for (int i = angular_axis_origin_x + angular_bars; i > angular_axis_origin_x; --i)
         {
@@ -257,7 +261,7 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
             NColors::WUnsetColor(body_info_win_, NColors::BLACK, NColors::MAGENTA);
         }
     }
-    else if (scout_state_.angular_velocity < 0)
+    else if (scout_state_.angular_velocity > 0)
     {
         for (int i = angular_axis_origin_x - angular_bars; i < angular_axis_origin_x; ++i)
         {
