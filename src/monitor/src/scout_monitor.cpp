@@ -30,6 +30,7 @@
 
 #include "stopwatch/stopwatch.h"
 #include "scout/scout_can_protocol.h"
+#include "scout/scout_command.hpp"
 #include "monitor/nshapes.hpp"
 #include "monitor/ncolors.hpp"
 
@@ -94,7 +95,7 @@ void ScoutMonitor::SetTestStateData()
     scout_state_.battery_voltage = 28.5;
 
     scout_state_.linear_velocity = 1.234;
-    scout_state_.angular_velocity = 5.678;
+    scout_state_.angular_velocity = -0.6853;
 
     // scout_state_.fault_code |= MOTOR_DRV_OVERHEAT_W;
     // scout_state_.fault_code |= MOTOR_OVERCURRENT_W;
@@ -130,7 +131,7 @@ void ScoutMonitor::SetTestStateData()
 
 void ScoutMonitor::Run(std::string device_name)
 {
-    if(device_name != "")
+    if (device_name != "")
         test_mode_ = false;
 
     if (test_mode_)
@@ -211,6 +212,26 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
     for (int i = linear_axis_origin_y + 1; i < linear_axis_negative_y; ++i)
         mvwprintw(body_info_win_, i, linear_axis_x, "-");
     mvwprintw(body_info_win_, linear_axis_negative_y, linear_axis_x, "v");
+    double linear_percentage = scout_state_.linear_velocity / ScoutMotionCmd::max_linear_velocity;
+    int linear_bars = std::abs(static_cast<int>(linear_percentage * 5));
+    if (scout_state_.linear_velocity > 0)
+    {
+        for (int i = linear_axis_origin_y - linear_bars; i < linear_axis_origin_y; ++i)
+        {
+            NColors::WSetColor(body_info_win_, NColors::BLACK, NColors::CYAN);
+            mvwprintw(body_info_win_, i, linear_axis_x, "-");
+            NColors::WUnsetColor(body_info_win_, NColors::BLACK, NColors::CYAN);
+        }
+    }
+    else if (scout_state_.linear_velocity < 0)
+    {
+        for (int i = linear_axis_origin_y + linear_bars; i > linear_axis_origin_y; --i)
+        {
+            NColors::WSetColor(body_info_win_, NColors::BLACK, NColors::CYAN);
+            mvwprintw(body_info_win_, i, linear_axis_x, "-");
+            NColors::WUnsetColor(body_info_win_, NColors::BLACK, NColors::CYAN);
+        }
+    }
 
     // show angular velocity
     const int angular_axis_y = linear_axis_origin_y;
@@ -224,6 +245,27 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
     for (int i = angular_axis_origin_x + 1; i < angular_axis_positive_x; ++i)
         mvwprintw(body_info_win_, angular_axis_y, i, "-");
     mvwprintw(body_info_win_, angular_axis_y, angular_axis_positive_x, ">");
+
+    double angular_percentage = scout_state_.angular_velocity / ScoutMotionCmd::max_angular_velocity;
+    int angular_bars = std::abs(static_cast<int>(angular_percentage * 5));
+    if (scout_state_.angular_velocity > 0)
+    {
+        for (int i = angular_axis_origin_x + angular_bars; i > angular_axis_origin_x; --i)
+        {
+            NColors::WSetColor(body_info_win_, NColors::BLACK, NColors::MAGENTA);
+            mvwprintw(body_info_win_, angular_axis_y, i, "-");
+            NColors::WUnsetColor(body_info_win_, NColors::BLACK, NColors::MAGENTA);
+        }
+    }
+    else if (scout_state_.angular_velocity < 0)
+    {
+        for (int i = angular_axis_origin_x - angular_bars; i < angular_axis_origin_x; ++i)
+        {
+            NColors::WSetColor(body_info_win_, NColors::BLACK, NColors::MAGENTA);
+            mvwprintw(body_info_win_, angular_axis_y, i, "-");
+            NColors::WUnsetColor(body_info_win_, NColors::BLACK, NColors::MAGENTA);
+        }
+    }
 
     // show velocity values
     std::string linear_vel_str = "linear : " + ConvertFloatToString(scout_state_.linear_velocity);
