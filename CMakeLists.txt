@@ -18,5 +18,13 @@ set(CMAKE_BUILD_TYPE Debug)
 set(BUILD_TESTS OFF)
 set(BUILD_MONITOR ON)
 
+# Disable monitor if ncurses library is not found
+set(CURSES_NEED_NCURSES TRUE)
+find_package(Curses QUIET)
+
+if(NOT CURSES_FOUND)
+set(BUILD_MONITOR OFF)
+endif()
+
 ## Add source directories
 add_subdirectory(src)

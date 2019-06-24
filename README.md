@@ -32,6 +32,12 @@ Install compile tools
 $ sudo apt install build-essential cmake
 ```
 
+If you want to build the monitor, install libncurses
+
+```
+$ sudo apt install libncurses5-dev
+```
+
 Configure and build
 
 ```
