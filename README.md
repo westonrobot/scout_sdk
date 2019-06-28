@@ -1,5 +1,7 @@
 # SDK for AgileX Scout Mobile Base
 
+Copyright (c) 2019 [WestonRobot](https://www.westonrobot.com/)
+
 ## Introduction
 
 This software packages provides a C++ interface to communicate with the Scout mobile base, for sending commands to the robot and acquiring latest robot state.
