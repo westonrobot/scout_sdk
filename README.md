@@ -35,7 +35,6 @@ The intructions work for stm32f0-based adapter with [candleLight](https://github
 2. Bringup can device
    ```
    $ sudo ip link set can0 up type can bitrate 500000
-   $ sudo ifconfig can0 up
    ```
 3. If no error occured during the previous steps, you should be able to see the can device now by using command
    ```
