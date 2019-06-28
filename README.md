@@ -24,6 +24,35 @@ See "src/demo/demo_scout_can.cpp" for an example.
 
 A easy and low-cost option to use the CAN interface would be using a Raspberry Pi or Beaglebone board with CAN Hat/Cape. The SDK can compile on both x86 and ARM platforms. Then you can use whatever interface you prefer (serial, USB, Ethernet etc.) for the communication between the single-board computer and your main PC.
 
+* Setup CAN-To-USB adapter 
+ 
+The intructions work for stm32f0-based adapter with [candleLight](https://github.com/HubertD/candleLight_fw) firmware on a host computer running Linux. (Refer to limitations listed at the bottom for more details.)
+
+1. Enable gs_usb kernel module
+    ```
+    $ sudo modprobe gs_usb
+    ```
+2. Bringup can device
+   ```
+   $ sudo ip link set can0 up type can bitrate 500000
+   $ sudo ifconfig can0 up
+   ```
+3. If no error occured during the previous steps, you should be able to see the can device now by using command
+   ```
+   $ ifconfig -a
+   ```
+4. Install and use can-utils to test the hardware
+    ```
+    $ sudo apt install can-utils
+    ```
+5. Testing command
+    ```
+    # receiving data from can0
+    $ candump can0
+    # send data to can0
+    $ cansend can0 001#1122334455667788
+    ```
+
 ## Build SDK
 
 Install compile tools
@@ -65,3 +94,8 @@ $ make
     If you use a CAN-to-USB adapter, make sure it supports slcan or can be brought up as a native CAN device (for example, CANable https://www.canable.io/). Some adapters may use a custom-defined protocol and appear as a serial device in Linux. In such case, you will have to translate the bytes between CAN and UART by yourself. It would be difficult for us to provide support for them since not all manufactures define this protocol in the same way.
 
 2. Release v0.1 of this SDK provided a serial interface to talk with the robot. Front/rear light on the robot cannot be controlled and only a small subset of all robot states can be acquired throught that interface. Full support of the serial interface is still under development and requires additional work in both the SDK and firmware.
+
+## Reference
+
+* [Candlelight firmware](https://wiki.linklayer.com/index.php/CandleLightFirmware)
+* [CAN command reference in Linux](https://wiki.rdu.im/_pages/Notes/Embedded-System/Linux/can-bus-in-linux.html)
