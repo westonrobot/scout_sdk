@@ -41,8 +41,9 @@ set(BUILD_MONITOR ON)
 set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses QUIET)
 
-if(NOT CURSES_FOUND)
-set(BUILD_MONITOR OFF)
+if(BUILD_MONITOR AND NOT CURSES_FOUND)
+    set(BUILD_MONITOR OFF)
+    message(STATUS "Monitor app will not be built due to missing ncurses library, try: sudo apt install libncurses5-dev")
 endif()
 
 ## Add source directories
