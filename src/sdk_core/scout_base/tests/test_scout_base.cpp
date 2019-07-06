@@ -8,8 +8,6 @@
 #include <chrono>
 #include <cmath>
 
-#include "stopwatch/stopwatch.h"
-
 #include "scout/scout_base.hpp"
 
 #define TEST_WITHOUT_SERIAL_HARDWARE

@@ -28,7 +28,13 @@
 #include <sstream>
 #include <iomanip>
 
-#include "stopwatch/stopwatch.h"
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cstdint>
+#include <ratio>
+#include <thread>
+
 #include "scout/scout_can_protocol.h"
 #include "scout/scout_command.hpp"
 #include "monitor/nshapes.hpp"
@@ -45,6 +51,66 @@ std::string ConvertFloatToString(double vel, int digit_num = 3)
     streamObj << vel;
     return streamObj.str();
 }
+
+// source: https://github.com/rxdu/stopwatch
+struct StopWatch
+{
+    using Clock = std::chrono::high_resolution_clock;
+    using time_point = typename Clock::time_point;
+    using duration = typename Clock::duration;
+
+    StopWatch() { tic_point = Clock::now(); };
+
+    time_point tic_point;
+
+    void tic()
+    {
+        tic_point = Clock::now();
+    };
+
+    double toc()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tic_point).count() / 1000000.0;
+    };
+
+    // for different precisions
+    double stoc()
+    {
+        return std::chrono::duration_cast<std::chrono::seconds>(Clock::now() - tic_point).count();
+    };
+
+    double mtoc()
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - tic_point).count();
+    };
+
+    double utoc()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tic_point).count();
+    };
+
+    double ntoc()
+    {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - tic_point).count();
+    };
+
+    // you have to call tic() before calling this function
+    void sleep_until_ms(int64_t period_ms)
+    {
+        int64_t duration = period_ms - std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - tic_point).count();
+
+        if (duration > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+    };
+
+    void sleep_until_us(int64_t period_us)
+    {
+        int64_t duration = period_us - std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tic_point).count();
+
+        if (duration > 0)
+            std::this_thread::sleep_for(std::chrono::microseconds(duration));
+    };
+};
 } // namespace
 
 namespace wescore
@@ -139,7 +205,7 @@ void ScoutMonitor::Run(std::string device_name)
     else
         scout_base_.ConnectCANBus(device_name);
 
-    stopwatch::StopWatch sw;
+    StopWatch sw;
     while (keep_running_)
     {
         // label starting point of iteration
@@ -283,17 +349,17 @@ void ScoutMonitor::ShowVehicleState(int y, int x)
     mvwprintw(body_info_win_, linear_axis_negative_y + 3, angular_axis_negative_x - 2, angular_vel_str.c_str());
 
     // show vehicle base
-    NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 2, angular_axis_negative_x - 4,
+    NShapes::WDrawRectangle(body_info_win_, linear_axis_tip_y - 2, angular_axis_negative_x - 4,
                            linear_axis_negative_y + 4, angular_axis_positive_x + 3);
 
     // show vehicle wheels
-    NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_negative_x - 9,
+    NShapes::WDrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_negative_x - 9,
                            linear_axis_tip_y + 4, angular_axis_negative_x - 5);
-    NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_negative_x - 9,
+    NShapes::WDrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_negative_x - 9,
                            linear_axis_negative_y + 3, angular_axis_negative_x - 5);
-    NShapes::DrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_positive_x + 4,
+    NShapes::WDrawRectangle(body_info_win_, linear_axis_tip_y - 1, angular_axis_positive_x + 4,
                            linear_axis_tip_y + 4, angular_axis_positive_x + 8);
-    NShapes::DrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_positive_x + 4,
+    NShapes::WDrawRectangle(body_info_win_, linear_axis_negative_y - 2, angular_axis_positive_x + 4,
                            linear_axis_negative_y + 3, angular_axis_positive_x + 8);
 
     // front right motor

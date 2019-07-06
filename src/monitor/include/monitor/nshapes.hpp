@@ -16,7 +16,8 @@ namespace wescore
 {
 struct NShapes
 {
-    static void DrawRectangle(WINDOW *win, int tl_y, int tl_x, int br_y, int br_x);
+    static void DrawRectangle(int tl_y, int tl_x, int br_y, int br_x);
+    static void WDrawRectangle(WINDOW *win, int tl_y, int tl_x, int br_y, int br_x);
 };
 } // namespace wescore
 
