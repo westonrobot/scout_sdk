@@ -590,15 +590,15 @@ void ScoutMonitor::UpdateScoutSystemInfo()
 
     const int sec4 = sec3 + 8;
     NColors::WSetColor(system_info_win_, NColors::GREEN);
-    mvwprintw(system_info_win_, sec4, state_title_col + 1, "N: normal");
+    mvwprintw(system_info_win_, sec4, state_title_col + 1, "N: Normal");
     NColors::WUnsetColor(system_info_win_, NColors::GREEN);
 
     NColors::WSetColor(system_info_win_, NColors::YELLOW);
-    mvwprintw(system_info_win_, sec4, state_title_col + 12, "W: warning");
+    mvwprintw(system_info_win_, sec4, state_title_col + 12, "W: Warning");
     NColors::WUnsetColor(system_info_win_, NColors::YELLOW);
 
     NColors::WSetColor(system_info_win_, NColors::RED);
-    mvwprintw(system_info_win_, sec4 + 1, state_title_col + 1, "F: fault   P: protection");
+    mvwprintw(system_info_win_, sec4 + 1, state_title_col + 1, "F: Fault   P: Protection");
     NColors::WUnsetColor(system_info_win_, NColors::RED);
 
     wrefresh(system_info_win_);
