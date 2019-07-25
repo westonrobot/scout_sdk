@@ -1,6 +1,8 @@
 #include <iostream>
 
-#include "scout/scout_can_protocol.h"
+#include "scout_base/details/scout_can_parser.hpp"
+
+using namespace wescore;
 
 void print_msg(uint8_t data[8])
 {
@@ -12,26 +14,26 @@ void print_msg(uint8_t data[8])
 int main()
 {
     MotionControlMessage msg;
-    msg.data.cmd.control_mode = CMD_CAN_MODE;
-    msg.data.cmd.fault_clear_flag = NO_FAULT;
-    msg.data.cmd.linear_velocity_cmd = 10;
-    msg.data.cmd.angular_velocity_cmd = 0;
-    msg.data.cmd.reserved0 = 0;
-    msg.data.cmd.reserved1 = 0;
-    msg.data.cmd.count = 0;
-    msg.data.cmd.checksum = Agilex_CANMsgChecksum(msg.id, msg.data.raw, msg.dlc);
-    print_msg(msg.data.raw);
+    msg.msg.cmd.control_mode = CTRL_MODE_CMD_CAN;
+    msg.msg.cmd.fault_clear_flag = FAULT_CLR_NONE;
+    msg.msg.cmd.linear_velocity_cmd = 10;
+    msg.msg.cmd.angular_velocity_cmd = 0;
+    msg.msg.cmd.reserved0 = 0;
+    msg.msg.cmd.reserved1 = 0;
+    msg.msg.cmd.count = 0;
+    msg.msg.cmd.checksum = ScoutCANParser::Agilex_CANMsgChecksum(ScoutCANParser::CAN_MSG_MOTION_CONTROL_CMD_ID, msg.msg.raw, msg.len);
+    print_msg(msg.msg.raw);
 
     LightControlMessage msg2;
-    msg2.data.cmd.light_ctrl_enable = DISABLE_LIGHT_CTRL;
-    msg2.data.cmd.front_light_mode = CONST_ON;
-    msg2.data.cmd.front_light_custom = 0;
-    msg2.data.cmd.rear_light_mode = CONST_ON;
-    msg2.data.cmd.rear_light_custom = 0;
-    msg2.data.cmd.reserved0 = 0;
-    msg2.data.cmd.count = 0;
-    msg2.data.cmd.checksum = Agilex_CANMsgChecksum(msg2.id, msg2.data.raw, msg2.dlc);
-    print_msg(msg2.data.raw);
+    msg2.msg.cmd.light_ctrl_enable = LIGHT_DISABLE_CTRL;
+    msg2.msg.cmd.front_light_mode = LIGHT_MODE_CONST_ON;
+    msg2.msg.cmd.front_light_custom = 0;
+    msg2.msg.cmd.rear_light_mode = LIGHT_MODE_CONST_ON;
+    msg2.msg.cmd.rear_light_custom = 0;
+    msg2.msg.cmd.reserved0 = 0;
+    msg2.msg.cmd.count = 0;
+    msg2.msg.cmd.checksum = ScoutCANParser::Agilex_CANMsgChecksum(ScoutCANParser::CAN_MSG_LIGHT_CONTROL_CMD_ID, msg2.msg.raw, msg2.len);
+    print_msg(msg2.msg.raw);
 
     return 0;
 }

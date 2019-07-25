@@ -8,7 +8,7 @@
 #include <chrono>
 #include <cmath>
 
-#include "scout/scout_base.hpp"
+#include "scout_base/scout_base.hpp"
 
 #define TEST_WITHOUT_SERIAL_HARDWARE
 
@@ -16,9 +16,30 @@ using namespace wescore;
 
 int main(int argc, char **argv)
 {
+    std::string device_name;
+    int32_t baud_rate = 0;
+
+    if (argc == 2)
+    {
+        device_name = {argv[1]};
+        std::cout << "Specified CAN: " << device_name << std::endl;
+    }
+    else if (argc == 3)
+    {
+        device_name = {argv[1]};
+        baud_rate = std::stol(argv[2]);
+        std::cout << "Specified serial: " << device_name << "@" << baud_rate << std::endl;
+    }
+    else
+    {
+        std::cout << "Usage: app_scout_monitor <interface>" << std::endl
+                  << "Example 1: ./app_scout_monitor can1"
+                  << "Example 2: ./app_scout_monitor /dev/ttyUSB0 115200" << std::endl;
+        return -1;
+    }
+
     ScoutBase scout;
-    scout.ConnectCANBus("can1");
-    scout.StartCmdThread(10);
+    scout.Connect(device_name, baud_rate);
 
     scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_ON, 0, ScoutLightCmd::LightMode::CONST_ON, 0});
 
@@ -29,7 +50,7 @@ int main(int argc, char **argv)
 
         if(count == 10)
         {
-            // scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
+            // scout.SetLightCommand({ScoutLightCmd::LightMode::LIGHT_MODE_CONST_OFF, 0, ScoutLightCmd::LightMode::LIGHT_MODE_CONST_OFF, 0});
             scout.DisableLightCmdControl();
         }
 

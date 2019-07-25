@@ -1,31 +1,34 @@
-/* 
- * demo_scout_can.cpp
- * 
- * Created on: Jun 12, 2019 05:03
- * Description: 
- * 
- * Copyright (c) 2019 Ruixiang Du (rdu)
- */ 
+#include <iostream>
+
+#include "scout_base/details/scout_serial_parser.hpp"
+
+using namespace wescore;
 
 #include "scout_base/scout_base.hpp"
+
+#define TEST_WITHOUT_SERIAL_HARDWARE
 
 using namespace wescore;
 
 int main(int argc, char **argv)
 {
     ScoutBase scout;
-    scout.Connect("can0");
-    scout.SetCmdThreadPeriodMs(10);
+    // scout.ConfigureCANBus("can1");
+    scout.Connect("/dev/ttyUSB0", 115200);
+    // scout.StartCmdThread(10);
 
-    scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_ON, 0, ScoutLightCmd::LightMode::CONST_ON, 0});
+    // scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_ON, 0, ScoutLightCmd::LightMode::CONST_ON, 0});
 
     int count = 0;
     while (true)
     {
-        scout.SetMotionCommand(0.5, 0.2);
+        // scout.SetMotionCommand(0.5, 0.2);
 
-        if (count == 10)
-            scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
+        // if(count == 10)
+        // {
+        //     // scout.SetLightCommand({ScoutLightCmd::LightMode::LIGHT_MODE_CONST_OFF, 0, ScoutLightCmd::LightMode::LIGHT_MODE_CONST_OFF, 0});
+        //     scout.DisableLightCmdControl();
+        // }
 
         auto state = scout.GetScoutState();
         std::cout << "-------------------------------" << std::endl;

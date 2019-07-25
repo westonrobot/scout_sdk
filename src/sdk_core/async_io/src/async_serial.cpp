@@ -41,7 +41,9 @@ using std::error_code;
 
 std::atomic<size_t> ASyncSerial::conn_id_counter{0};
 
-ASyncSerial::ASyncSerial(std::string device, unsigned baudrate, bool hwflow) : tx_total_bytes(0),
+ASyncSerial::ASyncSerial(std::string device, unsigned baudrate, bool hwflow) : device_(device),
+                                                                               baudrate_(baudrate),
+                                                                               hwflow_(hwflow), tx_total_bytes(0),
                                                                                rx_total_bytes(0),
                                                                                last_tx_total_bytes(0),
                                                                                last_rx_total_bytes(0),
@@ -50,10 +52,9 @@ ASyncSerial::ASyncSerial(std::string device, unsigned baudrate, bool hwflow) : t
                                                                                tx_q{},
                                                                                rx_buf{},
                                                                                io_service(),
-                                                                               serial_dev(io_service)
+                                                                               serial_dev_(io_service)
 {
     conn_id = conn_id_counter.fetch_add(1);
-    open(device, baudrate, hwflow);
 }
 
 ASyncSerial::~ASyncSerial()
@@ -65,23 +66,30 @@ void ASyncSerial::open(std::string device, unsigned baudrate, bool hwflow)
 {
     using SPB = asio::serial_port_base;
 
-    std::cout << "connection: " << conn_id << " , device: " << device.c_str() << " @ " << baudrate << "bps" << std::endl;
+    if (device != "")
+    {
+        device_ = device;
+        baudrate_ = baudrate;
+        hwflow_ = hwflow;
+    }
+
+    std::cout << "connection: " << conn_id << " , device: " << device_ << " @ " << baudrate_ << "bps" << std::endl;
 
     try
     {
-        serial_dev.open(device);
+        serial_dev_.open(device_);
 
         // Set baudrate and 8N1 mode
-        serial_dev.set_option(SPB::baud_rate(baudrate));
-        serial_dev.set_option(SPB::character_size(8));
-        serial_dev.set_option(SPB::parity(SPB::parity::none));
-        serial_dev.set_option(SPB::stop_bits(SPB::stop_bits::one));
-        serial_dev.set_option(SPB::flow_control((hwflow) ? SPB::flow_control::hardware : SPB::flow_control::none));
+        serial_dev_.set_option(SPB::baud_rate(baudrate_));
+        serial_dev_.set_option(SPB::character_size(8));
+        serial_dev_.set_option(SPB::parity(SPB::parity::none));
+        serial_dev_.set_option(SPB::stop_bits(SPB::stop_bits::one));
+        serial_dev_.set_option(SPB::flow_control((hwflow_) ? SPB::flow_control::hardware : SPB::flow_control::none));
 
 #if defined(__linux__)
         // Enable low latency mode on Linux
         {
-            int fd = serial_dev.native_handle();
+            int fd = serial_dev_.native_handle();
 
             struct serial_struct ser_info;
             ioctl(fd, TIOCGSERIAL, &ser_info);
@@ -99,6 +107,7 @@ void ASyncSerial::open(std::string device, unsigned baudrate, bool hwflow)
 
     // NOTE: shared_from_this() should not be used in constructors
 
+    // TODO is the following step necessary?
     // give some work to io_service before start
     io_service.post(std::bind(&ASyncSerial::do_read, this));
 
@@ -115,8 +124,8 @@ void ASyncSerial::close()
     if (!is_open())
         return;
 
-    serial_dev.cancel();
-    serial_dev.close();
+    serial_dev_.cancel();
+    serial_dev_.close();
 
     io_service.stop();
 
@@ -168,19 +177,14 @@ void ASyncSerial::send_bytes(const uint8_t *bytes, size_t length)
 {
     if (!is_open())
     {
-        std::cerr << "send: channel closed!"
-                  << " connection id: " << conn_id << std::endl;
+        std::cerr << "send: channel closed! connection id: " << conn_id << std::endl;
         return;
     }
 
-    {
-        lock_guard lock(mutex);
-
-        if (tx_q.size() >= MAX_TXQ_SIZE)
-            throw std::length_error("ASyncSerial::send_bytes: TX queue overflow");
-
-        tx_q.emplace_back(bytes, length);
-    }
+    lock_guard lock(mutex);
+    if (tx_q.size() >= MAX_TXQ_SIZE)
+        throw std::length_error("ASyncSerial::send_bytes: TX queue overflow");
+    tx_q.emplace_back(bytes, length);
     io_service.post(std::bind(&ASyncSerial::do_write, shared_from_this(), true));
 }
 
@@ -207,7 +211,7 @@ void ASyncSerial::default_receive_callback(uint8_t *buf, const size_t bufsize, s
 void ASyncSerial::do_read(void)
 {
     auto sthis = shared_from_this();
-    serial_dev.async_read_some(
+    serial_dev_.async_read_some(
         buffer(rx_buf),
         [sthis](error_code error, size_t bytes_transferred) {
             if (error)
@@ -237,7 +241,7 @@ void ASyncSerial::do_write(bool check_tx_state)
     tx_in_progress = true;
     auto sthis = shared_from_this();
     auto &buf_ref = tx_q.front();
-    serial_dev.async_write_some(
+    serial_dev_.async_write_some(
         buffer(buf_ref.dpos(), buf_ref.nbytes()),
         [sthis, &buf_ref](error_code error, size_t bytes_transferred) {
             assert(bytes_transferred <= buf_ref.len);
@@ -261,9 +265,7 @@ void ASyncSerial::do_write(bool check_tx_state)
 
             buf_ref.pos += bytes_transferred;
             if (buf_ref.nbytes() == 0)
-            {
                 sthis->tx_q.pop_front();
-            }
 
             if (!sthis->tx_q.empty())
                 sthis->do_write(false);

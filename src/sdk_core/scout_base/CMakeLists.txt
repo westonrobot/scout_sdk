@@ -1,7 +1,8 @@
 ## Add libraries
 set(SCOUT_BASE_SRC 
     src/scout_base.cpp
-    # src/scout_serial.cpp
+    src/scout_can_parser.cpp
+    src/scout_serial_parser.cpp
 )
 add_library(scoutbase STATIC ${SCOUT_BASE_SRC})
 set_target_properties(scoutbase PROPERTIES POSITION_INDEPENDENT_CODE ON)

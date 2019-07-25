@@ -4,5 +4,5 @@ add_subdirectory(sdk_core)
 add_subdirectory(third_party)
 
 if(BUILD_MONITOR)
-add_subdirectory(monitor)
+add_subdirectory(scout_monitor)
 endif()

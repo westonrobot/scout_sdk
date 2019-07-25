@@ -18,6 +18,7 @@
  *  [1] http://www.webalice.it/fede.tft/serial_port/serial_port.html
  * 
  */
+
 /*
  * libmavconn
  * Copyright 2013,2014,2015,2016 Vladimir Ermakov, All rights reserved.
@@ -47,13 +48,19 @@ namespace wescore
 using steady_clock = std::chrono::steady_clock;
 using lock_guard = std::lock_guard<std::recursive_mutex>;
 
+/// Note: instance of ASyncSerial MUST be managed by a std::shared_ptr<ASyncSerial>
 class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
 {
-  public:
+public:
     static constexpr auto DEFAULT_DEVICE = "/dev/ttyUSB0";
     static constexpr auto DEFAULT_BAUDRATE = 115200;
     static constexpr std::size_t MAX_TXQ_SIZE = 1000;
 
+    /**
+     * @param buf: pointer to a buffer
+     * @param bufsize: size of the buffer (the value should be constant in most cases)
+     * @param bytes_received: number of bytes received inside the buffer
+     */
     using ReceiveCallback = std::function<void(uint8_t *buf, const size_t bufsize, size_t bytes_received)>;
     using ClosedCallback = std::function<void(void)>;
 
@@ -69,7 +76,7 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
         float rx_speed;             //!< current receive speed [B/s]
     };
 
-  public:
+public:
     ASyncSerial(std::string device = DEFAULT_DEVICE, unsigned baudrate = DEFAULT_BAUDRATE, bool hwflow = false);
     ~ASyncSerial();
 
@@ -80,19 +87,26 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
     std::size_t conn_id;
 
     static Ptr open_url(std::string url);
-    void open(std::string device, unsigned baudrate, bool hwflow);
+    void open(std::string device = "", unsigned baudrate = 0, bool hwflow = false);
     void close();
+
+    void set_baud(unsigned baudrate) { serial_dev_.set_option(asio::serial_port_base::baud_rate(baudrate)); }
 
     void send_bytes(const uint8_t *bytes, size_t length);
     void set_receive_callback(ReceiveCallback cb) { receive_cb = cb; }
     void set_closed_callback(ClosedCallback cb) { port_closed_cb = cb; }
 
-    inline bool is_open() { return serial_dev.is_open(); }
+    inline bool is_open() { return serial_dev_.is_open(); }
     IOStat get_iostat();
 
-  private:
+private:
     // monotonic counter (increment only)
     static std::atomic<std::size_t> conn_id_counter;
+
+    // port properties
+    std::string device_ = DEFAULT_DEVICE;
+    unsigned baudrate_ = DEFAULT_BAUDRATE;
+    bool hwflow_ = false;
 
     // port statistics
     std::atomic<std::size_t> tx_total_bytes;
@@ -105,7 +119,7 @@ class ASyncSerial : public std::enable_shared_from_this<ASyncSerial>
     // io service
     asio::io_service io_service;
     std::thread io_thread;
-    asio::serial_port serial_dev;
+    asio::serial_port serial_dev_;
 
     std::atomic<bool> tx_in_progress;
     std::deque<MsgBuffer> tx_q;

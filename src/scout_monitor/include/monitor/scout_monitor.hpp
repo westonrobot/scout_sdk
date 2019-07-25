@@ -10,8 +10,8 @@
 #ifndef SCOUT_MONITOR_HPP
 #define SCOUT_MONITOR_HPP
 
-#include "scout/scout_base.hpp"
-#include "scout/scout_state.hpp"
+#include "scout_base/scout_base.hpp"
+#include "scout_base/scout_state.hpp"
 
 #include <ncurses.h>
 
@@ -23,7 +23,7 @@ public:
     ScoutMonitor();
     ~ScoutMonitor();
 
-    void Run(std::string device_name = "");
+    void Run(std::string device_name = "", int32_t baud_rate = 0);
     void Terminate() { keep_running_ = false; }
 
 private:
