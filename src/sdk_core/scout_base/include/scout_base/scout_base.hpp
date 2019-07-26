@@ -24,6 +24,7 @@
 #include "scout_base/scout_command.hpp"
 
 #include "scout_base/details/scout_serial_parser.hpp"
+#include "scout_base/details/scout_can_parser.hpp"
 
 namespace wescore
 {
@@ -102,7 +103,9 @@ private:
     void ParseUARTBuffer(uint8_t *buf, const size_t bufsize, size_t bytes_received);
 
     void NewStatusMsgReceivedCallback(const ScoutStatusMessage &msg);
-    void UpdateScoutState(const ScoutStatusMessage &status_msg, ScoutState &state);
+
+public:
+    static void UpdateScoutState(const ScoutStatusMessage &status_msg, ScoutState &state);
 };
 } // namespace wescore
 

@@ -55,6 +55,8 @@ The intructions work for stm32f0-based adapter with [candleLight](https://github
     $ cansend can0 001#1122334455667788
     ```
 
+Two scripts inside the "./scripts" folder are provided for easy setup. You can run "./setup_can2usb.bash" for the first-time setup and run "./bringup_can2usb.bash" to bring up the device each time you unplug and re-plug the adapter.
+
 ## Build SDK
 
 Install compile tools

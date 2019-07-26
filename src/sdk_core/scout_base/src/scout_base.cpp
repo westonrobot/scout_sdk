@@ -10,8 +10,6 @@
 #include <ratio>
 #include <thread>
 
-#include "scout_base/details/scout_can_parser.hpp"
-
 namespace
 {
 // source: https://github.com/rxdu/stopwatch
