@@ -6,7 +6,7 @@ Copyright (c) 2019 [WestonRobot](https://www.westonrobot.com/)
 
 This software packages provides a C++ interface to communicate with the Scout mobile base, for sending commands to the robot and acquiring latest robot state.
 
-Generally, you only need to instantiate an object of "class ScoutBase", then use the object to programmatically control the robot. Internally, class ScoutBase manages two background threads, one to process CAN messages of the robot state and accordingly update state variables in the ScoutState data structre, and the other to maintain a 50Hz loop and send latest command to the robot base. User can iteratively perform tasks in the main thread and check the robot state or set control commands. 
+Generally, you only need to instantiate an object of "class ScoutBase", then use the object to programmatically control the robot. Internally, class ScoutBase manages two background threads, one to process CAN/UART messages of the robot state and accordingly update state variables in the ScoutState data structre, and the other to maintain a 50Hz loop and send latest command to the robot base. User can iteratively perform tasks in the main thread and check the robot state or set control commands. 
 
 Refer to "src/demo/demo_scout_can.cpp" for an example.
 
@@ -23,11 +23,11 @@ Refer to "src/demo/demo_scout_can.cpp" for an example.
 ## Hardware Interface
 
 * CAN: full support
-* RS-232: under development
+* RS-232: full support
 
 A easy and low-cost option to use the CAN interface would be using a Raspberry Pi or Beaglebone board with CAN Hat/Cape. The SDK can compile on both x86 and ARM platforms. Then you can use whatever interface you prefer (serial, USB, Ethernet etc.) for the communication between the single-board computer and your main PC.
 
-* Setup CAN-To-USB adapter 
+## Setup CAN-To-USB adapter 
  
 The intructions work for stm32f0-based adapter with [candleLight](https://github.com/HubertD/candleLight_fw) firmware on a host computer running Linux. (Refer to limitations listed at the bottom for more details.)
 
@@ -97,7 +97,9 @@ $ make
     
     If you use a CAN-to-USB adapter, make sure it supports slcan or can be brought up as a native CAN device (for example, CANable https://www.canable.io/). Some adapters may use a custom-defined protocol and appear as a serial device in Linux. In such case, you will have to translate the byte stream between CAN and UART by yourself. It would be difficult for us to provide support for them since not all manufactures define this protocol in the same way.
 
+<!-- 
 2. Release v0.1 of this SDK provided a serial interface to talk with the robot. Front/rear light on the robot cannot be controlled and only a small subset of all robot states can be acquired through that interface. Full support of the serial interface is still under development and requires additional work on both the SDK and firmware sides.
+-->
 
 ## Reference
 
