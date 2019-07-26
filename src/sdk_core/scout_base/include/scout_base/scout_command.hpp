@@ -38,10 +38,10 @@ struct ScoutMotionCmd
     int8_t angular_velocity;
     FaultClearFlag fault_clear_flag;
 
-    static constexpr double max_linear_velocity = 1.5;      // 1.5m/s
-    static constexpr double min_linear_velocity = -1.5;     // -1.5m/s
-    static constexpr double max_angular_velocity = 0.7853;  // 0.7853rad/s
-    static constexpr double min_angular_velocity = -0.7853; // -0.7853rad/s
+    static constexpr double max_linear_velocity = 1.5;      // 1.5 m/s
+    static constexpr double min_linear_velocity = -1.5;     // -1.5 m/s
+    static constexpr double max_angular_velocity = 0.5235;  // 0.5235 rad/s
+    static constexpr double min_angular_velocity = -0.5235; // -0.5235 rad/s
 };
 
 struct ScoutLightCmd

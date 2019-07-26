@@ -17,15 +17,15 @@ int main(int argc, char **argv)
     scout.Connect("/dev/ttyUSB0", 115200);
     scout.SetCmdThreadPeriodMs(10);
 
-    scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_ON, 0, ScoutLightCmd::LightMode::CONST_ON, 0});
+    scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_ON, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
 
     int count = 0;
     while (true)
     {
-        scout.SetMotionCommand(0.5, 0.2);
+        scout.SetMotionCommand(0.0, -0.5);
 
         if (count == 10)
-            scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
+            scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_ON, 0});
 
         auto state = scout.GetScoutState();
         std::cout << "-------------------------------" << std::endl;
