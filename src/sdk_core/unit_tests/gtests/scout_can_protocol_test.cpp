@@ -165,7 +165,7 @@ TEST_F(ScoutCANProtocolTest, MotionStatusMsg)
 
     ScoutState state2;
     auto msg2 = ScoutCANParser::UnpackScoutCANFrameToMsg(&motion_status_frame2);
-    scout_base.UpdateScoutState(msg2, state2);
+    ScoutBase::UpdateScoutState(msg2, state2);
 
     ASSERT_FLOAT_EQ(state2.linear_velocity, -1.256);
     ASSERT_FLOAT_EQ(state2.angular_velocity, -0.123);
