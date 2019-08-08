@@ -36,50 +36,11 @@ HunterStatusMessage HunterCANParser::UnpackHunterCANFrameToMsg(can_frame *rx_fra
         std::memcpy(msgs.motion_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
-    case CAN_MSG_LIGHT_CONTROL_STATUS_ID:
-    {
-        msgs.updated_msg_type = HunterLightStatusMsg;
-        msgs.light_status_msg.id = CAN_MSG_LIGHT_CONTROL_STATUS_ID;
-        std::memcpy(msgs.light_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        break;
-    }
-    case CAN_MSG_SYSTEM_STATUS_STATUS_ID:
+    case CAN_MSG_SYSTEM_STATUS_ID:
     {
         msgs.updated_msg_type = HunterSystemStatusMsg;
-        msgs.system_status_msg.id = CAN_MSG_SYSTEM_STATUS_STATUS_ID;
+        msgs.system_status_msg.id = CAN_MSG_SYSTEM_STATUS_ID;
         std::memcpy(msgs.system_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        break;
-    }
-    case CAN_MSG_MOTOR1_DRIVER_STATUS_ID:
-    {
-        msgs.updated_msg_type = HunterMotor1DriverStatusMsg;
-        msgs.motor_driver_status_msg.id = CAN_MSG_MOTOR1_DRIVER_STATUS_ID;
-        msgs.motor_driver_status_msg.motor_id = SCOUT_MOTOR1_ID;
-        std::memcpy(msgs.motor_driver_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        break;
-    }
-    case CAN_MSG_MOTOR2_DRIVER_STATUS_ID:
-    {
-        msgs.updated_msg_type = HunterMotor2DriverStatusMsg;
-        msgs.motor_driver_status_msg.id = CAN_MSG_MOTOR2_DRIVER_STATUS_ID;
-        msgs.motor_driver_status_msg.motor_id = SCOUT_MOTOR2_ID;
-        std::memcpy(msgs.motor_driver_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        break;
-    }
-    case CAN_MSG_MOTOR3_DRIVER_STATUS_ID:
-    {
-        msgs.updated_msg_type = HunterMotor3DriverStatusMsg;
-        msgs.motor_driver_status_msg.id = CAN_MSG_MOTOR3_DRIVER_STATUS_ID;
-        msgs.motor_driver_status_msg.motor_id = SCOUT_MOTOR3_ID;
-        std::memcpy(msgs.motor_driver_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
-        break;
-    }
-    case CAN_MSG_MOTOR4_DRIVER_STATUS_ID:
-    {
-        msgs.updated_msg_type = HunterMotor4DriverStatusMsg;
-        msgs.motor_driver_status_msg.id = CAN_MSG_MOTOR4_DRIVER_STATUS_ID;
-        msgs.motor_driver_status_msg.motor_id = SCOUT_MOTOR4_ID;
-        std::memcpy(msgs.motor_driver_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
     default:

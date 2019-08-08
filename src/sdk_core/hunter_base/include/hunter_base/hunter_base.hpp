@@ -19,7 +19,8 @@
 #include "async_io/async_can.hpp"
 #include "async_io/async_serial.hpp"
 
-#include "hunter_base/hunter_protocol.h"
+#include "agilex_protocol/hunter_protocol.h"
+
 #include "hunter_base/hunter_state.hpp"
 #include "hunter_base/hunter_command.hpp"
 
@@ -52,10 +53,6 @@ public:
     void SetMotionCommand(double linear_vel, double angular_vel,
                           HunterMotionCmd::FaultClearFlag fault_clr_flag = HunterMotionCmd::FaultClearFlag::NO_FAULT);
 
-    // light control
-    void SetLightCommand(HunterLightCmd cmd);
-    void DisableLightCmdControl();
-
     // get robot state
     HunterState GetHunterState();
 
@@ -70,7 +67,7 @@ private:
 
     // serial port related variables
     uint8_t tx_cmd_len_;
-    uint8_t tx_buffer_[SCOUT_CMD_BUF_LEN];
+    uint8_t tx_buffer_[HUNTER_CMD_BUF_LEN];
     HunterSerialParser serial_parser_;
 
     // cmd/status update related variables

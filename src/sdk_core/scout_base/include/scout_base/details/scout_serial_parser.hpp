@@ -14,7 +14,7 @@
 #include <string>
 #include <functional>
 
-#include "scout_base/scout_protocol.h"
+#include "agilex_protocol/scout_protocol.h"
 
 namespace wescore
 {

@@ -43,33 +43,6 @@ void HunterSerialParser::PackMotionControlMsgToBuffer(const MotionControlMessage
     len = buf[2] + FRAME_SOF_LEN + 1;
 }
 
-void HunterSerialParser::PackLightControlMsgToBuffer(const LightControlMessage &msg, uint8_t *buf, uint8_t &len)
-{
-    // SOF
-    buf[0] = FRAME_SOF1;
-    buf[1] = FRAME_SOF2;
-
-    // frame len, type, ID
-    buf[2] = 0x0a;
-    buf[3] = FRAME_TYPE_CMD;
-    buf[4] = msg.id;
-
-    // frame payload
-    buf[5] = msg.msg.cmd.light_ctrl_enable;
-    buf[6] = msg.msg.cmd.front_light_mode;
-    buf[7] = msg.msg.cmd.front_light_custom;
-    buf[8] = msg.msg.cmd.rear_light_mode;
-    buf[9] = msg.msg.cmd.rear_light_custom;
-    buf[10] = 0x00;
-
-    // frame count, checksum
-    buf[11] = msg.msg.cmd.count;
-    buf[12] = HunterSerialParser::CalcChecksum(buf, buf[2] + FRAME_SOF_LEN);
-
-    // length: SOF + Frame + Checksum
-    len = buf[2] + FRAME_SOF_LEN + 1;
-}
-
 uint8_t HunterSerialParser::CalcChecksum(uint8_t *buf, uint8_t len)
 {
     uint8_t checksum = 0;
@@ -313,76 +286,6 @@ HunterStatusMessage HunterSerialParser::ConstructMessage()
         msg.motion_status_msg.msg.status.checksum = frame_checksum_;
         break;
     }
-    case FRAME_MOTOR1_DRIVER_STATUS_ID:
-    {
-        msg.updated_msg_type = HunterMotor1DriverStatusMsg;
-        msg.motor_driver_status_msg.msg.status.current.high_byte = payload_buffer_[0];
-        msg.motor_driver_status_msg.msg.status.current.low_byte = payload_buffer_[1];
-        msg.motor_driver_status_msg.msg.status.rpm.high_byte = payload_buffer_[2];
-        msg.motor_driver_status_msg.msg.status.rpm.low_byte = payload_buffer_[3];
-        msg.motor_driver_status_msg.msg.status.temperature = payload_buffer_[4];
-        ;
-        msg.motor_driver_status_msg.msg.status.reserved0 = 0x00;
-        msg.motor_driver_status_msg.msg.status.count = frame_cnt_;
-        msg.motor_driver_status_msg.msg.status.checksum = frame_checksum_;
-        break;
-    }
-    case FRAME_MOTOR2_DRIVER_STATUS_ID:
-    {
-        msg.updated_msg_type = HunterMotor2DriverStatusMsg;
-        msg.motor_driver_status_msg.msg.status.current.high_byte = payload_buffer_[0];
-        msg.motor_driver_status_msg.msg.status.current.low_byte = payload_buffer_[1];
-        msg.motor_driver_status_msg.msg.status.rpm.high_byte = payload_buffer_[2];
-        msg.motor_driver_status_msg.msg.status.rpm.low_byte = payload_buffer_[3];
-        msg.motor_driver_status_msg.msg.status.temperature = payload_buffer_[4];
-        ;
-        msg.motor_driver_status_msg.msg.status.reserved0 = 0x00;
-        msg.motor_driver_status_msg.msg.status.count = frame_cnt_;
-        msg.motor_driver_status_msg.msg.status.checksum = frame_checksum_;
-        break;
-    }
-    case FRAME_MOTOR3_DRIVER_STATUS_ID:
-    {
-        msg.updated_msg_type = HunterMotor3DriverStatusMsg;
-        msg.motor_driver_status_msg.msg.status.current.high_byte = payload_buffer_[0];
-        msg.motor_driver_status_msg.msg.status.current.low_byte = payload_buffer_[1];
-        msg.motor_driver_status_msg.msg.status.rpm.high_byte = payload_buffer_[2];
-        msg.motor_driver_status_msg.msg.status.rpm.low_byte = payload_buffer_[3];
-        msg.motor_driver_status_msg.msg.status.temperature = payload_buffer_[4];
-        ;
-        msg.motor_driver_status_msg.msg.status.reserved0 = 0x00;
-        msg.motor_driver_status_msg.msg.status.count = frame_cnt_;
-        msg.motor_driver_status_msg.msg.status.checksum = frame_checksum_;
-        break;
-    }
-    case FRAME_MOTOR4_DRIVER_STATUS_ID:
-    {
-        msg.updated_msg_type = HunterMotor4DriverStatusMsg;
-        msg.motor_driver_status_msg.msg.status.current.high_byte = payload_buffer_[0];
-        msg.motor_driver_status_msg.msg.status.current.low_byte = payload_buffer_[1];
-        msg.motor_driver_status_msg.msg.status.rpm.high_byte = payload_buffer_[2];
-        msg.motor_driver_status_msg.msg.status.rpm.low_byte = payload_buffer_[3];
-        msg.motor_driver_status_msg.msg.status.temperature = payload_buffer_[4];
-        ;
-        msg.motor_driver_status_msg.msg.status.reserved0 = 0x00;
-        msg.motor_driver_status_msg.msg.status.count = frame_cnt_;
-        msg.motor_driver_status_msg.msg.status.checksum = frame_checksum_;
-        break;
-    }
-    case FRAME_LIGHT_STATUS_ID:
-    {
-        msg.updated_msg_type = HunterLightStatusMsg;
-        msg.light_status_msg.msg.status.light_ctrl_enable = payload_buffer_[0];
-        msg.light_status_msg.msg.status.front_light_mode = payload_buffer_[1];
-        msg.light_status_msg.msg.status.front_light_custom = payload_buffer_[2];
-        msg.light_status_msg.msg.status.rear_light_mode = payload_buffer_[3];
-        msg.light_status_msg.msg.status.rear_light_custom = payload_buffer_[4];
-        ;
-        msg.light_status_msg.msg.status.reserved0 = 0x00;
-        msg.light_status_msg.msg.status.count = frame_cnt_;
-        msg.light_status_msg.msg.status.checksum = frame_checksum_;
-        break;
-    }
     }
     return msg;
 }
@@ -403,34 +306,9 @@ void HunterSerialParser::DefaultReceiveCallback(const HunterStatusMessage &msg)
         std::cout << "motion control feedback received" << std::endl;
         break;
     }
-    case HunterLightStatusMsg:
-    {
-        std::cout << "light control feedback received" << std::endl;
-        break;
-    }
     case HunterSystemStatusMsg:
     {
         std::cout << "system status feedback received" << std::endl;
-        break;
-    }
-    case HunterMotor1DriverStatusMsg:
-    {
-        std::cout << "motor 1 driver feedback received" << std::endl;
-        break;
-    }
-    case HunterMotor2DriverStatusMsg:
-    {
-        std::cout << "motor 2 driver feedback received" << std::endl;
-        break;
-    }
-    case HunterMotor3DriverStatusMsg:
-    {
-        std::cout << "motor 3 driver feedback received" << std::endl;
-        break;
-    }
-    case HunterMotor4DriverStatusMsg:
-    {
-        std::cout << "motor 4 driver feedback received" << std::endl;
         break;
     }
     }

@@ -6,7 +6,7 @@ set(SCOUT_BASE_SRC
 )
 add_library(scoutbase STATIC ${SCOUT_BASE_SRC})
 set_target_properties(scoutbase PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(scoutbase asyncio)
+target_link_libraries(scoutbase asyncio agilex_protocol)
 target_include_directories(scoutbase PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>

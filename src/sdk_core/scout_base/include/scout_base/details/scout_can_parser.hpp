@@ -16,7 +16,7 @@
 
 #include <linux/can.h>
 
-#include "scout_base/scout_protocol.h"
+#include "agilex_protocol/scout_protocol.h"
 
 namespace wescore
 {
@@ -27,7 +27,7 @@ constexpr int32_t CAN_MSG_MOTION_CONTROL_CMD_ID = 0x130;
 constexpr int32_t CAN_MSG_MOTION_CONTROL_STATUS_ID = 0x131;
 constexpr int32_t CAN_MSG_LIGHT_CONTROL_CMD_ID = 0x140;
 constexpr int32_t CAN_MSG_LIGHT_CONTROL_STATUS_ID = 0x141;
-constexpr int32_t CAN_MSG_SYSTEM_STATUS_STATUS_ID = 0x151;
+constexpr int32_t CAN_MSG_SYSTEM_STATUS_ID = 0x151;
 constexpr int32_t CAN_MSG_MOTOR1_DRIVER_STATUS_ID = 0x200;
 constexpr int32_t CAN_MSG_MOTOR2_DRIVER_STATUS_ID = 0x201;
 constexpr int32_t CAN_MSG_MOTOR3_DRIVER_STATUS_ID = 0x202;

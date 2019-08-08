@@ -16,6 +16,8 @@ extern "C" {
 
 #include "stdint.h"
 
+#define HUNTER_CMD_BUF_LEN               32
+
 #define HUNTER_MOTOR_STEER_ID           ((uint8_t)0x01)
 #define HUNTER_MOTOR_DRIVE_ID           ((uint8_t)0x02)
 
@@ -35,15 +37,6 @@ extern "C" {
 #define FAULT_CLR_MOTOR4_COMM           ((uint8_t)0x06)
 #define FAULT_CLR_MOTOR_DRV_OVERHEAT    ((uint8_t)0x07)
 #define FAULT_CLR_MOTOR_OVERCURRENT     ((uint8_t)0x08)
-
-// Light Control
-#define LIGHT_DISABLE_CTRL              ((uint8_t)0x00)
-#define LIGHT_ENABLE_CTRL               ((uint8_t)0x01)
-
-#define LIGHT_MODE_CONST_OFF            ((uint8_t)0x00)
-#define LIGHT_MODE_CONST_ON             ((uint8_t)0x01)
-#define LIGHT_MODE_BREATH               ((uint8_t)0x02)
-#define LIGHT_MODE_CUSTOM               ((uint8_t)0x03)
 
 // System Status Feedback
 #define BASE_STATE_NORMAL               ((uint8_t)0x00)
@@ -150,85 +143,11 @@ typedef struct {
     } msg;
 } SystemStatusMessage;
 
-// Light Control
-typedef struct {
-    int32_t id;
-    const uint8_t len = 8;
-    union
-    {
-        struct
-        {
-            uint8_t light_ctrl_enable;
-            uint8_t front_light_mode;
-            uint8_t front_light_custom;
-            uint8_t rear_light_mode;
-            uint8_t rear_light_custom;
-            uint8_t reserved0;
-            uint8_t count;
-            uint8_t checksum;
-        } cmd;
-        uint8_t raw[8];
-    } msg;
-} LightControlMessage;
-
-typedef struct {
-    int32_t id;
-    const uint8_t len = 8;
-    union
-    {
-        struct
-        {
-            uint8_t light_ctrl_enable;
-            uint8_t front_light_mode;
-            uint8_t front_light_custom;
-            uint8_t rear_light_mode;
-            uint8_t rear_light_custom;
-            uint8_t reserved0;
-            uint8_t count;
-            uint8_t checksum;
-        } status;
-        uint8_t raw[8];
-    } msg;
-} LightStatusMessage;
-
-// Motor Driver Feedback
-typedef struct
-{
-    int32_t id;
-    uint8_t motor_id;
-    const uint8_t len = 8;
-    union {
-        struct
-        {
-            struct
-            {
-                uint8_t high_byte;
-                uint8_t low_byte;
-            } current;
-            struct
-            {
-                uint8_t high_byte;
-                uint8_t low_byte;
-            } rpm;
-            int8_t temperature;
-            uint8_t reserved0;
-            uint8_t count;
-            uint8_t checksum;
-        } status;
-        uint8_t raw[8];
-    } msg;
-} MotorDriverStatusMessage;
-
 typedef enum
 {
     HunterStatusNone = 0x00,
     HunterMotionStatusMsg = 0x01,
-    HunterLightStatusMsg = 0x02,
-    HunterSystemStatusMsg = 0x03,
-    HunterMotor1DriverStatusMsg = 0x04,
-    HunterMotor2DriverStatusMsg = 0x05,
-    HunterMotor3DriverStatusMsg = 0x06,
-    HunterMotor4DriverStatusMsg = 0x07
+    HunterSystemStatusMsg = 0x02
 } HunterStatusMsgType;
 
 typedef struct 
@@ -237,9 +156,7 @@ typedef struct
 
     // only one of the following fields is updated, as specified by updated_msg_type
     MotionStatusMessage motion_status_msg;
-    LightStatusMessage light_status_msg;
     SystemStatusMessage system_status_msg;
-    MotorDriverStatusMessage motor_driver_status_msg;
 } HunterStatusMessage;
 
 #pragma pack(pop)

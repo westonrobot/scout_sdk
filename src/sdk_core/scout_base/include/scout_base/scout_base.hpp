@@ -19,7 +19,8 @@
 #include "async_io/async_can.hpp"
 #include "async_io/async_serial.hpp"
 
-#include "scout_base/scout_protocol.h"
+#include "agilex_protocol/scout_protocol.h"
+
 #include "scout_base/scout_state.hpp"
 #include "scout_base/scout_command.hpp"
 

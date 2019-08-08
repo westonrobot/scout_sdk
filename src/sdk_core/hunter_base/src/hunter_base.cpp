@@ -192,58 +192,6 @@ void HunterBase::SendMotionCmd(uint8_t count)
     }
 }
 
-void HunterBase::SendLightCmd(uint8_t count)
-{
-    LightControlMessage l_msg;
-
-    if (can_connected_)
-        l_msg.id = HunterCANParser::CAN_MSG_LIGHT_CONTROL_CMD_ID;
-    else if (serial_connected_)
-        l_msg.id = HunterSerialParser::FRAME_LIGHT_CONTROL_CMD_ID;
-
-    light_cmd_mutex_.lock();
-    if (light_ctrl_enabled_)
-    {
-        l_msg.msg.cmd.light_ctrl_enable = LIGHT_ENABLE_CTRL;
-
-        l_msg.msg.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
-        l_msg.msg.cmd.front_light_custom = current_light_cmd_.front_custom_value;
-        l_msg.msg.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
-        l_msg.msg.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
-    }
-    else
-    {
-        l_msg.msg.cmd.light_ctrl_enable = LIGHT_DISABLE_CTRL;
-
-        l_msg.msg.cmd.front_light_mode = LIGHT_MODE_CONST_OFF;
-        l_msg.msg.cmd.front_light_custom = 0;
-        l_msg.msg.cmd.rear_light_mode = LIGHT_MODE_CONST_OFF;
-        l_msg.msg.cmd.rear_light_custom = 0;
-    }
-    light_ctrl_requested_ = false;
-    light_cmd_mutex_.unlock();
-
-    l_msg.msg.cmd.reserved0 = 0;
-    l_msg.msg.cmd.count = count;
-
-    if (can_connected_)
-        l_msg.msg.cmd.checksum = HunterCANParser::Agilex_CANMsgChecksum(l_msg.id, l_msg.msg.raw, l_msg.len);
-    // serial_connected_: checksum will be calculated later when packed into a complete serial frame
-
-    if (can_connected_)
-    {
-        // send to can bus
-        can_frame l_frame = HunterCANParser::PackMsgToHunterCANFrame(l_msg);
-        can_if_->send_frame(l_frame);
-    }
-    else
-    {
-        // send to serial port
-        HunterSerialParser::PackLightControlMsgToBuffer(l_msg, tx_buffer_, tx_cmd_len_);
-        serial_if_->send_bytes(tx_buffer_, tx_cmd_len_);
-    }
-}
-
 void HunterBase::ControlLoop(int32_t period_ms)
 {
     StopWatch ctrl_sw;
@@ -292,21 +240,6 @@ void HunterBase::SetMotionCommand(double linear_vel, double angular_vel, HunterM
     current_motion_cmd_.fault_clear_flag = fault_clr_flag;
 }
 
-void HunterBase::SetLightCommand(HunterLightCmd cmd)
-{
-    std::lock_guard<std::mutex> guard(light_cmd_mutex_);
-    current_light_cmd_ = cmd;
-    light_ctrl_enabled_ = true;
-    light_ctrl_requested_ = true;
-}
-
-void HunterBase::DisableLightCmdControl()
-{
-    std::lock_guard<std::mutex> guard(light_cmd_mutex_);
-    light_ctrl_enabled_ = false;
-    light_ctrl_requested_ = true;
-}
-
 void HunterBase::ParseCANFrame(can_frame *rx_frame)
 {
     // validate checksum, discard frame if fails
@@ -347,20 +280,6 @@ void HunterBase::UpdateHunterState(const HunterStatusMessage &status_msg, Hunter
         state.angular_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.msg.status.angular_velocity.high_byte) << 8) / 1000.0;
         break;
     }
-    case HunterLightStatusMsg:
-    {
-        // std::cout << "light control feedback received" << std::endl;
-        const LightStatusMessage &msg = status_msg.light_status_msg;
-        if (msg.msg.status.light_ctrl_enable == LIGHT_DISABLE_CTRL)
-            state.light_control_enabled = false;
-        else
-            state.light_control_enabled = true;
-        state.front_light_state.mode = msg.msg.status.front_light_mode;
-        state.front_light_state.custom_value = msg.msg.status.front_light_custom;
-        state.rear_light_state.mode = msg.msg.status.rear_light_mode;
-        state.rear_light_state.custom_value = msg.msg.status.rear_light_custom;
-        break;
-    }
     case HunterSystemStatusMsg:
     {
         // std::cout << "system status feedback received" << std::endl;
@@ -369,42 +288,6 @@ void HunterBase::UpdateHunterState(const HunterStatusMessage &status_msg, Hunter
         state.base_state = msg.msg.status.base_state;
         state.battery_voltage = (static_cast<uint16_t>(msg.msg.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.msg.status.battery_voltage.high_byte) << 8) / 10.0;
         state.fault_code = (static_cast<uint16_t>(msg.msg.status.fault_code.low_byte) | static_cast<uint16_t>(msg.msg.status.fault_code.high_byte) << 8);
-        break;
-    }
-    case HunterMotor1DriverStatusMsg:
-    {
-        // std::cout << "motor 1 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[0].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[0].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[0].temperature = msg.msg.status.temperature;
-        break;
-    }
-    case HunterMotor2DriverStatusMsg:
-    {
-        // std::cout << "motor 2 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[1].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[1].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[1].temperature = msg.msg.status.temperature;
-        break;
-    }
-    case HunterMotor3DriverStatusMsg:
-    {
-        // std::cout << "motor 3 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[2].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[2].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[2].temperature = msg.msg.status.temperature;
-        break;
-    }
-    case HunterMotor4DriverStatusMsg:
-    {
-        // std::cout << "motor 4 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[3].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[3].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[3].temperature = msg.msg.status.temperature;
         break;
     }
     }

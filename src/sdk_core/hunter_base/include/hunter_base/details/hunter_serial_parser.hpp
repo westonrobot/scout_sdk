@@ -14,7 +14,7 @@
 #include <string>
 #include <functional>
 
-#include "hunter_base/hunter_protocol.h"
+#include "agilex_protocol/hunter_protocol.h"
 
 namespace wescore
 {
@@ -63,7 +63,6 @@ public:
 
     static uint8_t CalcChecksum(uint8_t *buf, uint8_t len);
     static void PackMotionControlMsgToBuffer(const MotionControlMessage &msg, uint8_t *buf, uint8_t& len);
-    static void PackLightControlMsgToBuffer(const LightControlMessage &msg, uint8_t *buf, uint8_t& len);
 
     void PrintStatistics();
 

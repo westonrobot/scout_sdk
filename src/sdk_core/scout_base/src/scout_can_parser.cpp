@@ -43,10 +43,10 @@ ScoutStatusMessage ScoutCANParser::UnpackScoutCANFrameToMsg(can_frame *rx_frame)
         std::memcpy(msgs.light_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
-    case CAN_MSG_SYSTEM_STATUS_STATUS_ID:
+    case CAN_MSG_SYSTEM_STATUS_ID:
     {
         msgs.updated_msg_type = ScoutSystemStatusMsg;
-        msgs.system_status_msg.id = CAN_MSG_SYSTEM_STATUS_STATUS_ID;
+        msgs.system_status_msg.id = CAN_MSG_SYSTEM_STATUS_ID;
         std::memcpy(msgs.system_status_msg.msg.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }

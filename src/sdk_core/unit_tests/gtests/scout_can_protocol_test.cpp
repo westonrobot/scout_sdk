@@ -90,7 +90,7 @@ struct ScoutCANProtocolTest : testing::Test
                                                                            light_status_frame.data,
                                                                            light_status_frame.can_dlc);
 
-        system_status_frame.can_id = ScoutCANParser::CAN_MSG_SYSTEM_STATUS_STATUS_ID;
+        system_status_frame.can_id = ScoutCANParser::CAN_MSG_SYSTEM_STATUS_ID;
         system_status_frame.can_dlc = 8;
         system_status_frame.data[0] = 0x01;
         system_status_frame.data[1] = 0x01;
