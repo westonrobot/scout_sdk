@@ -472,9 +472,9 @@ void ScoutMonitor::UpdateScoutSystemInfo()
     if (scout_state_.control_mode == CTRL_MODE_REMOTE)
         mvwprintw(system_info_win_, sec1 + 1, state_value_col, "REMOTE");
     else if (scout_state_.control_mode == CTRL_MODE_CMD_CAN)
-        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "CAN");
+        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "CMD");
     else if (scout_state_.control_mode == CTRL_MODE_CMD_UART)
-        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "UART");
+        mvwprintw(system_info_win_, sec1 + 1, state_value_col, "CMD");
     // mvwprintw(system_info_win_, sec1 + 1, state_value_col, std::to_string(scout_state_.control_mode).c_str());
 
     // battery voltage

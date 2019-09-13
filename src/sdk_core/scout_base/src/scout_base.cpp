@@ -278,8 +278,8 @@ void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMot
         angular_vel = ScoutMotionCmd::max_angular_velocity;
 
     std::lock_guard<std::mutex> guard(motion_cmd_mutex_);
-    current_motion_cmd_.linear_velocity = static_cast<uint8_t>(linear_vel / ScoutMotionCmd::max_linear_velocity * 100.0);
-    current_motion_cmd_.angular_velocity = static_cast<uint8_t>(angular_vel / ScoutMotionCmd::max_angular_velocity * 100.0);
+    current_motion_cmd_.linear_velocity = static_cast<int8_t>(linear_vel / ScoutMotionCmd::max_linear_velocity * 100.0);
+    current_motion_cmd_.angular_velocity = static_cast<int8_t>(angular_vel / ScoutMotionCmd::max_angular_velocity * 100.0);
     current_motion_cmd_.fault_clear_flag = fault_clr_flag;
 }
 
