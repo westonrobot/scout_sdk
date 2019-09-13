@@ -325,6 +325,12 @@ void ScoutBase::ParseUARTBuffer(uint8_t *buf, const size_t bufsize, size_t bytes
     // std::cout << "bytes received from serial: " << bytes_received << std::endl;
     // serial_parser_.PrintStatistics();
     // serial_parser_.ParseBuffer(buf, bytes_received);
+    ScoutStatusMessage status_msg;
+    for (int i = 0; i < bytes_received; ++i)
+    {
+        if (DecodeScoutStatusMsgFromUART(buf[i], &status_msg))
+            NewStatusMsgReceivedCallback(status_msg);
+    }
 }
 
 void ScoutBase::NewStatusMsgReceivedCallback(const ScoutStatusMessage &msg)
