@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     else
     {
         std::cout << "Usage: app_scout_monitor <interface>" << std::endl
-                  << "Example 1: ./app_scout_monitor can1"
+                  << "Example 1: ./app_scout_monitor can1" << std::endl
                   << "Example 2: ./app_scout_monitor /dev/ttyUSB0 115200" << std::endl;
         return -1;
     }

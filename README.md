@@ -1,10 +1,10 @@
-# SDK for AgileX Scout Mobile Base
+# SDK for AgileX Scout/Hunter Mobile Base
 
 Copyright (c) 2019 [WestonRobot](https://www.westonrobot.com/)
 
 ## Introduction
 
-This software packages provides a C++ interface to communicate with the Scout mobile base, for sending commands to the robot and acquiring latest robot state.
+This software packages provides a C++ interface to communicate with the Scout/Hunter mobile base, for sending commands to the robot and acquiring latest robot state.
 
 Generally, you only need to instantiate an object of "class ScoutBase", then use the object to programmatically control the robot. Internally, class ScoutBase manages two background threads, one to process CAN/UART messages of the robot state and accordingly update state variables in the ScoutState data structure, and the other to maintain a 50Hz loop and send the latest command to the robot base. User can iteratively perform tasks in the main thread and check the robot state or set control commands. 
 
