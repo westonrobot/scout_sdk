@@ -16,15 +16,15 @@
 #include <mutex>
 #include <functional>
 
+#include "scout_protocol/scout_protocol.h"
+#include "scout_protocol/scout_can_parser.h"
+#include "scout_protocol/scout_uart_parser.h"
+
 #include "async_io/async_can.hpp"
 #include "async_io/async_serial.hpp"
 
-#include "scout_base/scout_protocol.h"
 #include "scout_base/scout_state.hpp"
 #include "scout_base/scout_command.hpp"
-
-#include "scout_base/details/scout_serial_parser.hpp"
-#include "scout_base/details/scout_can_parser.hpp"
 
 namespace wescore
 {
@@ -71,7 +71,7 @@ private:
     // serial port related variables
     uint8_t tx_cmd_len_;
     uint8_t tx_buffer_[SCOUT_CMD_BUF_LEN];
-    ScoutSerialParser serial_parser_;
+    // ScoutSerialParser serial_parser_;
 
     // cmd/status update related variables
     std::thread cmd_thread_;

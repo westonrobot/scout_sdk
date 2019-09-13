@@ -1,5 +1,10 @@
 # Changelog for scout_sdk
 
+## 0.3 (2019-08-02)
+------------------
+* Added full UART support
+* Contributors: Ruixiang Du
+
 ## 0.2 (2019-06-14)
 ------------------
 * Deprecated initial serial interface support (new one under development)

@@ -130,7 +130,7 @@ void ScoutBase::ConfigureSerial(const std::string uart_name, int32_t baud_rate)
                                                std::placeholders::_2,
                                                std::placeholders::_3));
 
-    serial_parser_.SetReceiveCallback(std::bind(&ScoutBase::NewStatusMsgReceivedCallback, this, std::placeholders::_1));
+    // serial_parser_.SetReceiveCallback(std::bind(&ScoutBase::NewStatusMsgReceivedCallback, this, std::placeholders::_1));
 }
 
 void ScoutBase::StartCmdThread()
@@ -146,39 +146,42 @@ void ScoutBase::SendMotionCmd(uint8_t count)
 
     if (can_connected_)
     {
-        m_msg.id = ScoutCANParser::CAN_MSG_MOTION_CONTROL_CMD_ID;
-        m_msg.msg.cmd.control_mode = CTRL_MODE_CMD_CAN;
+        // m_msg.id = CAN_MSG_MOTION_CONTROL_CMD_ID;
+        m_msg.data.cmd.control_mode = CTRL_MODE_CMD_CAN;
     }
     else if (serial_connected_)
     {
-        m_msg.id = ScoutSerialParser::FRAME_MOTION_CONTROL_CMD_ID;
-        m_msg.msg.cmd.control_mode = CTRL_MODE_CMD_UART;
+        // m_msg.id = ScoutSerialParser::FRAME_MOTION_CONTROL_CMD_ID;
+        m_msg.data.cmd.control_mode = CTRL_MODE_CMD_UART;
     }
 
     motion_cmd_mutex_.lock();
-    m_msg.msg.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
-    m_msg.msg.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
-    m_msg.msg.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
+    m_msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
+    m_msg.data.cmd.linear_velocity_cmd = current_motion_cmd_.linear_velocity;
+    m_msg.data.cmd.angular_velocity_cmd = current_motion_cmd_.angular_velocity;
     motion_cmd_mutex_.unlock();
 
-    m_msg.msg.cmd.reserved0 = 0;
-    m_msg.msg.cmd.reserved1 = 0;
-    m_msg.msg.cmd.count = count;
+    m_msg.data.cmd.reserved0 = 0;
+    m_msg.data.cmd.reserved1 = 0;
+    m_msg.data.cmd.count = count;
 
     if (can_connected_)
-        m_msg.msg.cmd.checksum = ScoutCANParser::Agilex_CANMsgChecksum(m_msg.id, m_msg.msg.raw, m_msg.len);
+        m_msg.data.cmd.checksum = CalcScoutCANChecksum(m_msg.id, m_msg.data.raw, m_msg.len);
     // serial_connected_: checksum will be calculated later when packed into a complete serial frame
 
     if (can_connected_)
     {
         // send to can bus
-        can_frame m_frame = ScoutCANParser::PackMsgToScoutCANFrame(m_msg);
+        // can_frame m_frame = PackMsgToScoutCANFrame(m_msg);
+        can_frame m_frame;
+        EncodeScoutMotionControlMsgToCAN(&m_msg, &m_frame);
         can_if_->send_frame(m_frame);
     }
     else
     {
         // send to serial port
-        ScoutSerialParser::PackMotionControlMsgToBuffer(m_msg, tx_buffer_, tx_cmd_len_);
+        // ScoutSerialParser::PackMotionControlMsgToBuffer(m_msg, tx_buffer_, tx_cmd_len_);
+        EncodeMotionControlMsgToUART(&m_msg, tx_buffer_, &tx_cmd_len_);
         serial_if_->send_bytes(tx_buffer_, tx_cmd_len_);
     }
 }
@@ -187,50 +190,53 @@ void ScoutBase::SendLightCmd(uint8_t count)
 {
     LightControlMessage l_msg;
 
-    if (can_connected_)
-        l_msg.id = ScoutCANParser::CAN_MSG_LIGHT_CONTROL_CMD_ID;
-    else if (serial_connected_)
-        l_msg.id = ScoutSerialParser::FRAME_LIGHT_CONTROL_CMD_ID;
+    // if (can_connected_)
+    //     l_msg.id = CAN_MSG_LIGHT_CONTROL_CMD_ID;
+    // else if (serial_connected_)
+    //     l_msg.id = ScoutSerialParser::FRAME_LIGHT_CONTROL_CMD_ID;
 
     light_cmd_mutex_.lock();
     if (light_ctrl_enabled_)
     {
-        l_msg.msg.cmd.light_ctrl_enable = LIGHT_ENABLE_CTRL;
+        l_msg.data.cmd.light_ctrl_enable = LIGHT_ENABLE_CTRL;
 
-        l_msg.msg.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
-        l_msg.msg.cmd.front_light_custom = current_light_cmd_.front_custom_value;
-        l_msg.msg.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
-        l_msg.msg.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
+        l_msg.data.cmd.front_light_mode = static_cast<uint8_t>(current_light_cmd_.front_mode);
+        l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
+        l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
+        l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
     }
     else
     {
-        l_msg.msg.cmd.light_ctrl_enable = LIGHT_DISABLE_CTRL;
+        l_msg.data.cmd.light_ctrl_enable = LIGHT_DISABLE_CTRL;
 
-        l_msg.msg.cmd.front_light_mode = LIGHT_MODE_CONST_OFF;
-        l_msg.msg.cmd.front_light_custom = 0;
-        l_msg.msg.cmd.rear_light_mode = LIGHT_MODE_CONST_OFF;
-        l_msg.msg.cmd.rear_light_custom = 0;
+        l_msg.data.cmd.front_light_mode = LIGHT_MODE_CONST_OFF;
+        l_msg.data.cmd.front_light_custom = 0;
+        l_msg.data.cmd.rear_light_mode = LIGHT_MODE_CONST_OFF;
+        l_msg.data.cmd.rear_light_custom = 0;
     }
     light_ctrl_requested_ = false;
     light_cmd_mutex_.unlock();
 
-    l_msg.msg.cmd.reserved0 = 0;
-    l_msg.msg.cmd.count = count;
+    l_msg.data.cmd.reserved0 = 0;
+    l_msg.data.cmd.count = count;
 
     if (can_connected_)
-        l_msg.msg.cmd.checksum = ScoutCANParser::Agilex_CANMsgChecksum(l_msg.id, l_msg.msg.raw, l_msg.len);
+        l_msg.data.cmd.checksum = CalcScoutCANChecksum(l_msg.id, l_msg.data.raw, l_msg.len);
     // serial_connected_: checksum will be calculated later when packed into a complete serial frame
 
     if (can_connected_)
     {
         // send to can bus
-        can_frame l_frame = ScoutCANParser::PackMsgToScoutCANFrame(l_msg);
+        // can_frame l_frame = PackMsgToScoutCANFrame(l_msg);
+        can_frame l_frame;
+        EncodeScoutLightControlMsgToCAN(&l_msg, &l_frame);
         can_if_->send_frame(l_frame);
     }
     else
     {
         // send to serial port
-        ScoutSerialParser::PackLightControlMsgToBuffer(l_msg, tx_buffer_, tx_cmd_len_);
+        // ScoutSerialParser::PackLightControlMsgToBuffer(l_msg, tx_buffer_, tx_cmd_len_);
+        EncodeLightControlMsgToUART(&l_msg, tx_buffer_, &tx_cmd_len_);
         serial_if_->send_bytes(tx_buffer_, tx_cmd_len_);
     }
 }
@@ -301,14 +307,16 @@ void ScoutBase::DisableLightCmdControl()
 void ScoutBase::ParseCANFrame(can_frame *rx_frame)
 {
     // validate checksum, discard frame if fails
-    if (!rx_frame->data[7] == ScoutCANParser::Agilex_CANMsgChecksum(rx_frame->can_id, rx_frame->data, rx_frame->can_dlc))
+    if (!rx_frame->data[7] == CalcScoutCANChecksum(rx_frame->can_id, rx_frame->data, rx_frame->can_dlc))
     {
         std::cerr << "ERROR: checksum mismatch, discard frame with id " << rx_frame->can_id << std::endl;
         return;
     }
 
     // otherwise, update robot state with new frame
-    auto status_msg = ScoutCANParser::UnpackScoutCANFrameToMsg(rx_frame);
+    // auto status_msg = UnpackScoutCANFrameToMsg(rx_frame);
+    ScoutStatusMessage status_msg;
+    DecodeScoutStatusMsgFromCAN(rx_frame, &status_msg);
     NewStatusMsgReceivedCallback(status_msg);
 }
 
@@ -316,7 +324,7 @@ void ScoutBase::ParseUARTBuffer(uint8_t *buf, const size_t bufsize, size_t bytes
 {
     // std::cout << "bytes received from serial: " << bytes_received << std::endl;
     // serial_parser_.PrintStatistics();
-    serial_parser_.ParseBuffer(buf, bytes_received);
+    // serial_parser_.ParseBuffer(buf, bytes_received);
 }
 
 void ScoutBase::NewStatusMsgReceivedCallback(const ScoutStatusMessage &msg)
@@ -328,74 +336,50 @@ void ScoutBase::NewStatusMsgReceivedCallback(const ScoutStatusMessage &msg)
 
 void ScoutBase::UpdateScoutState(const ScoutStatusMessage &status_msg, ScoutState &state)
 {
-    switch (status_msg.updated_msg_type)
+    switch (status_msg.msg_type)
     {
     case ScoutMotionStatusMsg:
     {
         // std::cout << "motion control feedback received" << std::endl;
         const MotionStatusMessage &msg = status_msg.motion_status_msg;
-        state.linear_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.msg.status.linear_velocity.high_byte) << 8) / 1000.0;
-        state.angular_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.msg.status.angular_velocity.high_byte) << 8) / 1000.0;
+        state.linear_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.linear_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.linear_velocity.high_byte) << 8) / 1000.0;
+        state.angular_velocity = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.angular_velocity.low_byte) | static_cast<uint16_t>(msg.data.status.angular_velocity.high_byte) << 8) / 1000.0;
         break;
     }
     case ScoutLightStatusMsg:
     {
         // std::cout << "light control feedback received" << std::endl;
         const LightStatusMessage &msg = status_msg.light_status_msg;
-        if (msg.msg.status.light_ctrl_enable == LIGHT_DISABLE_CTRL)
+        if (msg.data.status.light_ctrl_enable == LIGHT_DISABLE_CTRL)
             state.light_control_enabled = false;
         else
             state.light_control_enabled = true;
-        state.front_light_state.mode = msg.msg.status.front_light_mode;
-        state.front_light_state.custom_value = msg.msg.status.front_light_custom;
-        state.rear_light_state.mode = msg.msg.status.rear_light_mode;
-        state.rear_light_state.custom_value = msg.msg.status.rear_light_custom;
+        state.front_light_state.mode = msg.data.status.front_light_mode;
+        state.front_light_state.custom_value = msg.data.status.front_light_custom;
+        state.rear_light_state.mode = msg.data.status.rear_light_mode;
+        state.rear_light_state.custom_value = msg.data.status.rear_light_custom;
         break;
     }
     case ScoutSystemStatusMsg:
     {
         // std::cout << "system status feedback received" << std::endl;
         const SystemStatusMessage &msg = status_msg.system_status_msg;
-        state.control_mode = msg.msg.status.control_mode;
-        state.base_state = msg.msg.status.base_state;
-        state.battery_voltage = (static_cast<uint16_t>(msg.msg.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.msg.status.battery_voltage.high_byte) << 8) / 10.0;
-        state.fault_code = (static_cast<uint16_t>(msg.msg.status.fault_code.low_byte) | static_cast<uint16_t>(msg.msg.status.fault_code.high_byte) << 8);
+        state.control_mode = msg.data.status.control_mode;
+        state.base_state = msg.data.status.base_state;
+        state.battery_voltage = (static_cast<uint16_t>(msg.data.status.battery_voltage.low_byte) | static_cast<uint16_t>(msg.data.status.battery_voltage.high_byte) << 8) / 10.0;
+        state.fault_code = (static_cast<uint16_t>(msg.data.status.fault_code.low_byte) | static_cast<uint16_t>(msg.data.status.fault_code.high_byte) << 8);
         break;
     }
-    case ScoutMotor1DriverStatusMsg:
+    case ScoutMotorDriverStatusMsg:
     {
         // std::cout << "motor 1 driver feedback received" << std::endl;
         const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[0].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[0].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[0].temperature = msg.msg.status.temperature;
-        break;
-    }
-    case ScoutMotor2DriverStatusMsg:
-    {
-        // std::cout << "motor 2 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[1].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[1].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[1].temperature = msg.msg.status.temperature;
-        break;
-    }
-    case ScoutMotor3DriverStatusMsg:
-    {
-        // std::cout << "motor 3 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[2].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[2].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[2].temperature = msg.msg.status.temperature;
-        break;
-    }
-    case ScoutMotor4DriverStatusMsg:
-    {
-        // std::cout << "motor 4 driver feedback received" << std::endl;
-        const MotorDriverStatusMessage &msg = status_msg.motor_driver_status_msg;
-        state.motor_states[3].current = (static_cast<uint16_t>(msg.msg.status.current.low_byte) | static_cast<uint16_t>(msg.msg.status.current.high_byte) << 8) / 10.0;
-        state.motor_states[3].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.msg.status.rpm.low_byte) | static_cast<uint16_t>(msg.msg.status.rpm.high_byte) << 8);
-        state.motor_states[3].temperature = msg.msg.status.temperature;
+        for (int i = 0; i < 4; ++i)
+        {
+            state.motor_states[status_msg.motor_driver_status_msg.motor_id].current = (static_cast<uint16_t>(msg.data.status.current.low_byte) | static_cast<uint16_t>(msg.data.status.current.high_byte) << 8) / 10.0;
+            state.motor_states[status_msg.motor_driver_status_msg.motor_id].rpm = static_cast<int16_t>(static_cast<uint16_t>(msg.data.status.rpm.low_byte) | static_cast<uint16_t>(msg.data.status.rpm.high_byte) << 8);
+            state.motor_states[status_msg.motor_driver_status_msg.motor_id].temperature = msg.data.status.temperature;
+        }
         break;
     }
     }
