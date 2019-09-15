@@ -34,7 +34,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 ## Optionally built modules: ON/OFF
-set(BUILD_TESTS OFF)
+set(BUILD_TESTS ON)
 set(BUILD_MONITOR ON)
 
 # Disable monitor if ncurses library is not found
