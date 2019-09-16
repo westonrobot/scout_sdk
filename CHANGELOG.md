@@ -5,7 +5,7 @@
 * Unified implementation of UART/CAN for firmware and SDK
 * Improvements of code organization
 * Contributors: Ruixiang Du
-* 
+
 ## 0.3 (2019-08-02)
 ------------------
 * Added full UART support
