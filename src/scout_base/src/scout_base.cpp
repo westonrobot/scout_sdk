@@ -135,6 +135,10 @@ void ScoutBase::ConfigureSerial(const std::string uart_name, int32_t baud_rate)
 
 void ScoutBase::StartCmdThread()
 {
+    current_motion_cmd_.linear_velocity = 0;
+    current_motion_cmd_.angular_velocity = 0;
+    current_motion_cmd_.fault_clear_flag = ScoutMotionCmd::FaultClearFlag::NO_FAULT;
+
     cmd_thread_ = std::thread(std::bind(&ScoutBase::ControlLoop, this, cmd_thread_period_ms_));
     cmd_thread_started_ = true;
 }
@@ -166,7 +170,7 @@ void ScoutBase::SendMotionCmd(uint8_t count)
     m_msg.data.cmd.count = count;
 
     if (can_connected_)
-        m_msg.data.cmd.checksum = CalcScoutCANChecksum(m_msg.id, m_msg.data.raw, m_msg.len);
+        m_msg.data.cmd.checksum = CalcScoutCANChecksum(CAN_MSG_MOTION_CONTROL_CMD_ID, m_msg.data.raw, 8);
     // serial_connected_: checksum will be calculated later when packed into a complete serial frame
 
     if (can_connected_)
@@ -204,6 +208,10 @@ void ScoutBase::SendLightCmd(uint8_t count)
         l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
         l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
         l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
+
+        // std::cout << "cmd: " << l_msg.data.cmd.front_light_mode << " , " << l_msg.data.cmd.front_light_custom << " , "
+        //           << l_msg.data.cmd.rear_light_mode << " , " << l_msg.data.cmd.rear_light_custom << std::endl;
+        // std::cout << "light cmd generated" << std::endl;
     }
     else
     {
@@ -221,15 +229,16 @@ void ScoutBase::SendLightCmd(uint8_t count)
     l_msg.data.cmd.count = count;
 
     if (can_connected_)
-        l_msg.data.cmd.checksum = CalcScoutCANChecksum(l_msg.id, l_msg.data.raw, l_msg.len);
+        l_msg.data.cmd.checksum = CalcScoutCANChecksum(CAN_MSG_LIGHT_CONTROL_CMD_ID, l_msg.data.raw, 8);
     // serial_connected_: checksum will be calculated later when packed into a complete serial frame
 
     if (can_connected_)
     {
         // send to can bus
-        // can_frame l_frame = PackMsgToScoutCANFrame(l_msg);
         can_frame l_frame;
+        // can_frame l_frame = PackMsgToScoutCANFrame(l_msg);
         EncodeScoutLightControlMsgToCAN(&l_msg, &l_frame);
+
         can_if_->send_frame(l_frame);
     }
     else
@@ -239,6 +248,16 @@ void ScoutBase::SendLightCmd(uint8_t count)
         EncodeLightControlMsgToUART(&l_msg, tx_buffer_, &tx_cmd_len_);
         serial_if_->send_bytes(tx_buffer_, tx_cmd_len_);
     }
+
+    // std::cout << "cmd: " << static_cast<int>(l_msg.data.cmd.front_light_mode) << " , " << static_cast<int>(l_msg.data.cmd.front_light_custom) << " , "
+    //           << static_cast<int>(l_msg.data.cmd.rear_light_mode) << " , " << static_cast<int>(l_msg.data.cmd.rear_light_custom) << std::endl;
+    // std::cout << "can: ";
+    // for (int i = 0; i < 8; ++i)
+    //     std::cout << static_cast<int>(l_frame.data[i]) << " ";
+    // std::cout << "uart: ";
+    // for (int i = 0; i < tx_cmd_len_; ++i)
+    //     std::cout << static_cast<int>(tx_buffer_[i]) << " ";
+    // std::cout << std::endl;
 }
 
 void ScoutBase::ControlLoop(int32_t period_ms)
@@ -291,6 +310,9 @@ void ScoutBase::SetMotionCommand(double linear_vel, double angular_vel, ScoutMot
 
 void ScoutBase::SetLightCommand(ScoutLightCmd cmd)
 {
+    if (!cmd_thread_started_)
+        StartCmdThread();
+
     std::lock_guard<std::mutex> guard(light_cmd_mutex_);
     current_light_cmd_ = cmd;
     light_ctrl_enabled_ = true;

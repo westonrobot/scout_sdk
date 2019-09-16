@@ -178,7 +178,7 @@ void EncodeMotionControlMsgToUART(const MotionControlMessage *msg, uint8_t *buf,
     // frame len, type, ID
     buf[2] = 0x0a;
     buf[3] = FRAME_TYPE_CONTROL;
-    buf[4] = msg->id;
+    buf[4] = UART_FRAME_MOTION_CONTROL_ID;
 
     // frame payload
     buf[5] = msg->data.cmd.control_mode;
@@ -205,7 +205,7 @@ void EncodeLightControlMsgToUART(const LightControlMessage *msg, uint8_t *buf, u
     // frame len, type, ID
     buf[2] = 0x0a;
     buf[3] = FRAME_TYPE_CONTROL;
-    buf[4] = msg->id;
+    buf[4] = UART_FRAME_LIGHT_CONTROL_ID;
 
     // frame payload
     buf[5] = msg->data.cmd.light_ctrl_enable;

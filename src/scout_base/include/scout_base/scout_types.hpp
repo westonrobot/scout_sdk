@@ -53,8 +53,8 @@ struct ScoutState
     LightState rear_light_state;
 
     // motion state
-    double linear_velocity;
-    double angular_velocity;
+    double linear_velocity = 0;
+    double angular_velocity = 0;
 };
 
 struct ScoutMotionCmd

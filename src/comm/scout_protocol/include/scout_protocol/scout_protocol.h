@@ -108,8 +108,6 @@ extern "C" {
 
 // Motion Control
 typedef struct {
-    int32_t id;
-    uint8_t len;
     union
     {
         struct
@@ -128,8 +126,6 @@ typedef struct {
 } MotionControlMessage;
 
 typedef struct {
-    int32_t id;
-    uint8_t len;
     union
     {
         struct
@@ -155,8 +151,6 @@ typedef struct {
 
 // System Status Feedback
 typedef struct {
-    int32_t id;
-    uint8_t len;
     union
     {
         struct
@@ -182,8 +176,6 @@ typedef struct {
 
 // Light Control
 typedef struct {
-    int32_t id;
-    uint8_t len;
     union
     {
         struct
@@ -202,8 +194,6 @@ typedef struct {
 } LightControlMessage;
 
 typedef struct {
-    int32_t id;
-    uint8_t len;
     union
     {
         struct
@@ -224,9 +214,7 @@ typedef struct {
 // Motor Driver Feedback
 typedef struct
 {
-    int32_t id;
     uint8_t motor_id;
-    uint8_t len;
     union {
         struct
         {

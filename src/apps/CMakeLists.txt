@@ -2,8 +2,8 @@
 #find_package(LIBRARY_NAME REQUIRED)
 
 # tests
-add_executable(scout_demo scout_demo/scout_demo.cpp)
-target_link_libraries(scout_demo scoutbase)
+add_executable(app_scout_demo scout_demo/scout_demo.cpp)
+target_link_libraries(app_scout_demo scoutbase)
 
 # add_executable(demo_scout_can demo_scout_can.cpp)
 # target_link_libraries(demo_scout_can scoutbase)

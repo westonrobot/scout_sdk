@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     else
     {
         std::cout << "Usage: app_scout_monitor <interface>" << std::endl
-                  << "Example 1: ./app_scout_monitor can0"
-                  << "Example 2: ./app_scout_monitor /dev/ttyUSB0 115200" << std::endl;
+                  << "Example 1: ./app_scout_demo can0" << std::endl
+                  << "Example 2: ./app_scout_demo /dev/ttyUSB0 115200" << std::endl;
         return -1;
     }
 
@@ -39,56 +39,70 @@ int main(int argc, char **argv)
     scout.Connect(device_name, baud_rate);
 
     // light control
+    std::cout << "Light: const off" << std::endl;
     scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_OFF, 0, ScoutLightCmd::LightMode::CONST_OFF, 0});
-    sleep(5);
+    sleep(3);
+    std::cout << "Light: const on" << std::endl;
     scout.SetLightCommand({ScoutLightCmd::LightMode::CONST_ON, 0, ScoutLightCmd::LightMode::CONST_ON, 0});
-    sleep(5);
+    sleep(3);
+    std::cout << "Light: breath" << std::endl;
     scout.SetLightCommand({ScoutLightCmd::LightMode::BREATH, 0, ScoutLightCmd::LightMode::BREATH, 0});
-    sleep(5);
+    sleep(3);
+    std::cout << "Light: custom 90-80" << std::endl;
     scout.SetLightCommand({ScoutLightCmd::LightMode::CUSTOM, 90, ScoutLightCmd::LightMode::CUSTOM, 80});
-    sleep(5);
+    sleep(3);
+    std::cout << "Light: diabled cmd control" << std::endl;
     scout.DisableLightCmdControl();
 
     int count = 0;
     while (true)
     {
         // motion control
-        if (count < 10)
+        if (count < 5)
         {
+            std::cout << "Motor: 0.2, 0" << std::endl;
             scout.SetMotionCommand(0.2, 0.0);
+        }
+        else if (count < 10)
+        {
+        std::cout << "Motor: 0.8, 0" << std::endl;
+        scout.SetMotionCommand(0.8, 0.0);
+        }
+        else if (count < 15)
+        {
+            std::cout << "Motor: 1.5, 0" << std::endl;
+            scout.SetMotionCommand(1.5, 0.0);
         }
         else if (count < 20)
         {
-            scout.SetMotionCommand(0.8, 0.0);
+            std::cout << "Motor: 1.0, 0.5" << std::endl;
+            scout.SetMotionCommand(1.0, 0.5);
+        }
+        else if (count < 25)
+        {
+            std::cout << "Motor: 0.0, 0" << std::endl;
+            scout.SetMotionCommand(0.0, 0.0);
         }
         else if (count < 30)
         {
-            scout.SetMotionCommand(1.5, 0.0);
+            std::cout << "Motor: -0.5, 0" << std::endl;
+            scout.SetMotionCommand(-0.5, 0.0);
+        }
+        else if (count < 35)
+        {
+            std::cout << "Motor: -1.0, -0.5" << std::endl;
+            scout.SetMotionCommand(-1.0, -0.5);
         }
         else if (count < 40)
         {
-            scout.SetMotionCommand(1.0, 0.5);
-        }
-        else if (count < 50)
-        {
-            scout.SetMotionCommand(0.0, 0.0);
-        }
-        else if (count < 55)
-        {
-            scout.SetMotionCommand(-0.5, 0.0);
-        }
-        else if (count < 65)
-        {
-            scout.SetMotionCommand(-1.0, -0.5);
-        }
-        else if (count < 75)
-        {
+            std::cout << "Motor: 0.0, 0, Light: breath" << std::endl;
             scout.SetMotionCommand(0.0, 0.0);
             scout.SetLightCommand({ScoutLightCmd::LightMode::BREATH, 0, ScoutLightCmd::LightMode::BREATH, 0});
         }
 
         auto state = scout.GetScoutState();
         std::cout << "-------------------------------" << std::endl;
+        std::cout << "count: " << count << std::endl;
         std::cout << "control mode: " << static_cast<int>(state.control_mode) << " , base state: " << static_cast<int>(state.base_state) << std::endl;
         std::cout << "battery voltage: " << state.battery_voltage << std::endl;
         std::cout << "velocity (linear, angular): " << state.linear_velocity << ", " << state.angular_velocity << std::endl;

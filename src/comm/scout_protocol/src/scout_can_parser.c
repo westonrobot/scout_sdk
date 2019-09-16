@@ -21,28 +21,28 @@ bool DecodeScoutStatusMsgFromCAN(const struct can_frame *rx_frame, ScoutStatusMe
     case CAN_MSG_MOTION_CONTROL_STATUS_ID:
     {
         msg->msg_type = ScoutMotionStatusMsg;
-        msg->motion_status_msg.id = CAN_MSG_MOTION_CONTROL_STATUS_ID;
+        // msg->motion_status_msg.id = CAN_MSG_MOTION_CONTROL_STATUS_ID;
         memcpy(msg->motion_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
     case CAN_MSG_LIGHT_CONTROL_STATUS_ID:
     {
         msg->msg_type = ScoutLightStatusMsg;
-        msg->light_status_msg.id = CAN_MSG_LIGHT_CONTROL_STATUS_ID;
+        // msg->light_status_msg.id = CAN_MSG_LIGHT_CONTROL_STATUS_ID;
         memcpy(msg->light_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
     case CAN_MSG_SYSTEM_STATUS_STATUS_ID:
     {
         msg->msg_type = ScoutSystemStatusMsg;
-        msg->system_status_msg.id = CAN_MSG_SYSTEM_STATUS_STATUS_ID;
+        // msg->system_status_msg.id = CAN_MSG_SYSTEM_STATUS_STATUS_ID;
         memcpy(msg->system_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
     case CAN_MSG_MOTOR1_DRIVER_STATUS_ID:
     {
         msg->msg_type = ScoutMotorDriverStatusMsg;
-        msg->motor_driver_status_msg.id = CAN_MSG_MOTOR1_DRIVER_STATUS_ID;
+        // msg->motor_driver_status_msg.id = CAN_MSG_MOTOR1_DRIVER_STATUS_ID;
         msg->motor_driver_status_msg.motor_id = SCOUT_MOTOR1_ID;
         memcpy(msg->motor_driver_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
@@ -50,7 +50,7 @@ bool DecodeScoutStatusMsgFromCAN(const struct can_frame *rx_frame, ScoutStatusMe
     case CAN_MSG_MOTOR2_DRIVER_STATUS_ID:
     {
         msg->msg_type = ScoutMotorDriverStatusMsg;
-        msg->motor_driver_status_msg.id = CAN_MSG_MOTOR2_DRIVER_STATUS_ID;
+        // msg->motor_driver_status_msg.id = CAN_MSG_MOTOR2_DRIVER_STATUS_ID;
         msg->motor_driver_status_msg.motor_id = SCOUT_MOTOR2_ID;
         memcpy(msg->motor_driver_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
@@ -58,7 +58,7 @@ bool DecodeScoutStatusMsgFromCAN(const struct can_frame *rx_frame, ScoutStatusMe
     case CAN_MSG_MOTOR3_DRIVER_STATUS_ID:
     {
         msg->msg_type = ScoutMotorDriverStatusMsg;
-        msg->motor_driver_status_msg.id = CAN_MSG_MOTOR3_DRIVER_STATUS_ID;
+        // msg->motor_driver_status_msg.id = CAN_MSG_MOTOR3_DRIVER_STATUS_ID;
         msg->motor_driver_status_msg.motor_id = SCOUT_MOTOR3_ID;
         memcpy(msg->motor_driver_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
@@ -66,7 +66,7 @@ bool DecodeScoutStatusMsgFromCAN(const struct can_frame *rx_frame, ScoutStatusMe
     case CAN_MSG_MOTOR4_DRIVER_STATUS_ID:
     {
         msg->msg_type = ScoutMotorDriverStatusMsg;
-        msg->motor_driver_status_msg.id = CAN_MSG_MOTOR4_DRIVER_STATUS_ID;
+        // msg->motor_driver_status_msg.id = CAN_MSG_MOTOR4_DRIVER_STATUS_ID;
         msg->motor_driver_status_msg.motor_id = SCOUT_MOTOR4_ID;
         memcpy(msg->motor_driver_status_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
@@ -88,14 +88,14 @@ bool DecodeScoutControlMsgFromCAN(const struct can_frame *rx_frame, ScoutControl
     case CAN_MSG_MOTION_CONTROL_CMD_ID:
     {
         msg->msg_type = ScoutMotionControlMsg;
-        msg->motion_control_msg.id = CAN_MSG_MOTION_CONTROL_CMD_ID;
+        // msg->motion_control_msg.id = CAN_MSG_MOTION_CONTROL_CMD_ID;
         memcpy(msg->motion_control_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
     case CAN_MSG_LIGHT_CONTROL_CMD_ID:
     {
         msg->msg_type = ScoutLightControlMsg;
-        msg->light_control_msg.id = CAN_MSG_LIGHT_CONTROL_STATUS_ID;
+        // msg->light_control_msg.id = CAN_MSG_LIGHT_CONTROL_STATUS_ID;
         memcpy(msg->light_control_msg.data.raw, rx_frame->data, rx_frame->can_dlc * sizeof(uint8_t));
         break;
     }
@@ -175,7 +175,7 @@ void EncodeScoutMotionControlMsgToCAN(const MotionControlMessage *msg, struct ca
 {
     tx_frame->can_id = CAN_MSG_MOTION_CONTROL_CMD_ID;
     tx_frame->can_dlc = 8;
-    memcpy(tx_frame->data, msg->data.raw, msg->len);
+    memcpy(tx_frame->data, msg->data.raw, tx_frame->can_dlc);
     tx_frame->data[7] = CalcScoutCANChecksum(tx_frame->can_id, tx_frame->data, tx_frame->can_dlc);
 }
 
@@ -183,7 +183,7 @@ void EncodeScoutLightControlMsgToCAN(const LightControlMessage *msg, struct can_
 {
     tx_frame->can_id = CAN_MSG_LIGHT_CONTROL_CMD_ID;
     tx_frame->can_dlc = 8;
-    memcpy(tx_frame->data, msg->data.raw, msg->len);
+    memcpy(tx_frame->data, msg->data.raw, tx_frame->can_dlc);
     tx_frame->data[7] = CalcScoutCANChecksum(tx_frame->can_id, tx_frame->data, tx_frame->can_dlc);
 }
 

@@ -131,6 +131,9 @@ ScoutMonitor::ScoutMonitor()
     body_info_win_ = newwin(bi_win_sy_, bi_win_sx_, bi_origin_y_, bi_origin_x_);
     system_info_win_ = newwin(si_win_sy_, si_win_sx_, si_origin_y_, si_origin_x_);
 
+    scout_state_.linear_velocity = 0;
+    scout_state_.angular_velocity = 0;
+
     NColors::InitColors();
 }
 
