@@ -70,7 +70,6 @@ private:
     // serial port related variables
     uint8_t tx_cmd_len_;
     uint8_t tx_buffer_[SCOUT_CMD_BUF_LEN];
-    // ScoutSerialParser serial_parser_;
 
     // cmd/status update related variables
     std::thread cmd_thread_;

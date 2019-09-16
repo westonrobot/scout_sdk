@@ -129,8 +129,6 @@ void ScoutBase::ConfigureSerial(const std::string uart_name, int32_t baud_rate)
                                                std::placeholders::_1,
                                                std::placeholders::_2,
                                                std::placeholders::_3));
-
-    // serial_parser_.SetReceiveCallback(std::bind(&ScoutBase::NewStatusMsgReceivedCallback, this, std::placeholders::_1));
 }
 
 void ScoutBase::StartCmdThread()
@@ -149,15 +147,9 @@ void ScoutBase::SendMotionCmd(uint8_t count)
     MotionControlMessage m_msg;
 
     if (can_connected_)
-    {
-        // m_msg.id = CAN_MSG_MOTION_CONTROL_CMD_ID;
         m_msg.data.cmd.control_mode = CTRL_MODE_CMD_CAN;
-    }
     else if (serial_connected_)
-    {
-        // m_msg.id = ScoutSerialParser::FRAME_MOTION_CONTROL_CMD_ID;
         m_msg.data.cmd.control_mode = CTRL_MODE_CMD_UART;
-    }
 
     motion_cmd_mutex_.lock();
     m_msg.data.cmd.fault_clear_flag = static_cast<uint8_t>(current_motion_cmd_.fault_clear_flag);
@@ -176,7 +168,6 @@ void ScoutBase::SendMotionCmd(uint8_t count)
     if (can_connected_)
     {
         // send to can bus
-        // can_frame m_frame = PackMsgToScoutCANFrame(m_msg);
         can_frame m_frame;
         EncodeScoutMotionControlMsgToCAN(&m_msg, &m_frame);
         can_if_->send_frame(m_frame);
@@ -184,7 +175,6 @@ void ScoutBase::SendMotionCmd(uint8_t count)
     else
     {
         // send to serial port
-        // ScoutSerialParser::PackMotionControlMsgToBuffer(m_msg, tx_buffer_, tx_cmd_len_);
         EncodeMotionControlMsgToUART(&m_msg, tx_buffer_, &tx_cmd_len_);
         serial_if_->send_bytes(tx_buffer_, tx_cmd_len_);
     }
@@ -193,11 +183,6 @@ void ScoutBase::SendMotionCmd(uint8_t count)
 void ScoutBase::SendLightCmd(uint8_t count)
 {
     LightControlMessage l_msg;
-
-    // if (can_connected_)
-    //     l_msg.id = CAN_MSG_LIGHT_CONTROL_CMD_ID;
-    // else if (serial_connected_)
-    //     l_msg.id = ScoutSerialParser::FRAME_LIGHT_CONTROL_CMD_ID;
 
     light_cmd_mutex_.lock();
     if (light_ctrl_enabled_)
@@ -208,10 +193,6 @@ void ScoutBase::SendLightCmd(uint8_t count)
         l_msg.data.cmd.front_light_custom = current_light_cmd_.front_custom_value;
         l_msg.data.cmd.rear_light_mode = static_cast<uint8_t>(current_light_cmd_.rear_mode);
         l_msg.data.cmd.rear_light_custom = current_light_cmd_.rear_custom_value;
-
-        // std::cout << "cmd: " << l_msg.data.cmd.front_light_mode << " , " << l_msg.data.cmd.front_light_custom << " , "
-        //           << l_msg.data.cmd.rear_light_mode << " , " << l_msg.data.cmd.rear_light_custom << std::endl;
-        // std::cout << "light cmd generated" << std::endl;
     }
     else
     {
@@ -236,7 +217,6 @@ void ScoutBase::SendLightCmd(uint8_t count)
     {
         // send to can bus
         can_frame l_frame;
-        // can_frame l_frame = PackMsgToScoutCANFrame(l_msg);
         EncodeScoutLightControlMsgToCAN(&l_msg, &l_frame);
 
         can_if_->send_frame(l_frame);
@@ -244,7 +224,6 @@ void ScoutBase::SendLightCmd(uint8_t count)
     else
     {
         // send to serial port
-        // ScoutSerialParser::PackLightControlMsgToBuffer(l_msg, tx_buffer_, tx_cmd_len_);
         EncodeLightControlMsgToUART(&l_msg, tx_buffer_, &tx_cmd_len_);
         serial_if_->send_bytes(tx_buffer_, tx_cmd_len_);
     }
@@ -336,7 +315,6 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
     }
 
     // otherwise, update robot state with new frame
-    // auto status_msg = UnpackScoutCANFrameToMsg(rx_frame);
     ScoutStatusMessage status_msg;
     DecodeScoutStatusMsgFromCAN(rx_frame, &status_msg);
     NewStatusMsgReceivedCallback(status_msg);
@@ -345,8 +323,6 @@ void ScoutBase::ParseCANFrame(can_frame *rx_frame)
 void ScoutBase::ParseUARTBuffer(uint8_t *buf, const size_t bufsize, size_t bytes_received)
 {
     // std::cout << "bytes received from serial: " << bytes_received << std::endl;
-    // serial_parser_.PrintStatistics();
-    // serial_parser_.ParseBuffer(buf, bytes_received);
     ScoutStatusMessage status_msg;
     for (int i = 0; i < bytes_received; ++i)
     {
