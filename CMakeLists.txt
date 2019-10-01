@@ -48,3 +48,7 @@ endif()
 
 ## Add source directories
 add_subdirectory(src)
+
+if(BUILD_TESTS)
+add_subdirectory(unit_tests)
+endif()
