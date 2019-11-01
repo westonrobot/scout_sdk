@@ -65,7 +65,6 @@ int main(int argc, char **argv)
             std::cout << "-------------------------------" << std::endl;
             std::cout << "discharge stopped at: " << state.battery_voltage << " V" << std::endl;
             std::cout << "-------------------------------" << std::endl;
-            break;
         }
         sleep(1);
         ++count;
