@@ -569,7 +569,10 @@ void ScoutMonitor::UpdateScoutSystemInfo()
     ShowStatusItemName(sec2 + 4, state_title_col, "-Bat over volt");
     ShowFault(sec2 + 4, fault_col_1, (scout_state_.fault_code & FAULT_BAT_OVER_VOL_F) == 0);
 
-    const int sec3 = sec2 + 6;
+    ShowStatusItemName(sec2 + 5, state_title_col, "-RC signal loss");
+    ShowFault(sec2 + 5, fault_col_1, (scout_state_.fault_code & FAULT_RC_SIGNAL_LOSS) == 0);
+
+    const int sec3 = sec2 + 7;
     mvwprintw(system_info_win_, sec3, state_title_col, "Comm faults");
 
     // CAN cmd checksum

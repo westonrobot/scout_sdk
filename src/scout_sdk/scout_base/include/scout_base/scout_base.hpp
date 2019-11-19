@@ -101,10 +101,10 @@ private:
     void ParseCANFrame(can_frame *rx_frame);
     void ParseUARTBuffer(uint8_t *buf, const size_t bufsize, size_t bytes_received);
 
-    void NewStatusMsgReceivedCallback(const ScoutStatusMessage &msg);
+    void NewStatusMsgReceivedCallback(const ScoutMessage &msg);
 
 public:
-    static void UpdateScoutState(const ScoutStatusMessage &status_msg, ScoutState &state);
+    static void UpdateScoutState(const ScoutMessage &status_msg, ScoutState &state);
 };
 } // namespace wescore
 

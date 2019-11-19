@@ -20,14 +20,8 @@ extern "C" {
 
 #include "scout_protocol/scout_protocol.h"
 
-bool DecodeScoutStatusMsgFromUART(uint8_t c, ScoutStatusMessage *msg);
-bool DecodeScoutControlMsgFromUART(uint8_t c, ScoutControlMessage *msg);
-
-void EncodeScoutStatusMsgToUART(const ScoutStatusMessage *msg, uint8_t *buf, uint8_t *len);
-void EncodeScoutControlMsgToUART(const ScoutControlMessage *msg, uint8_t *buf, uint8_t *len);
-
-void EncodeMotionControlMsgToUART(const MotionControlMessage *msg, uint8_t *buf, uint8_t *len);
-void EncodeLightControlMsgToUART(const LightControlMessage *msg, uint8_t *buf, uint8_t *len);
+bool DecodeScoutMsgFromUART(uint8_t c, ScoutMessage *msg);
+void EncodeScoutMsgToUART(const ScoutMessage *msg, uint8_t *buf, uint8_t *len);
 
 uint8_t CalcScoutUARTChecksum(uint8_t *buf, uint8_t len);
 

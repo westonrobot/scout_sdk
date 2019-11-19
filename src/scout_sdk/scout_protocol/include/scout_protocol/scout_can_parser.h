@@ -30,14 +30,8 @@ struct can_frame
 };
 #endif
 
-bool DecodeScoutStatusMsgFromCAN(const struct can_frame *rx_frame, ScoutStatusMessage *msg);
-bool DecodeScoutControlMsgFromCAN(const struct can_frame *rx_frame, ScoutControlMessage *msg);
-
-void EncodeScoutStatusMsgToCAN(const ScoutStatusMessage *msg, struct can_frame *tx_frame);
-void EncodeScoutControlMsgToCAN(const ScoutControlMessage *msg, struct can_frame *tx_frame);
-
-void EncodeScoutMotionControlMsgToCAN(const MotionControlMessage *msg, struct can_frame *tx_frame);
-void EncodeScoutLightControlMsgToCAN(const LightControlMessage *msg, struct can_frame *tx_frame);
+bool DecodeScoutMsgFromCAN(const struct can_frame *rx_frame, ScoutMessage *msg);
+void EncodeScoutMsgToCAN(const ScoutMessage *msg, struct can_frame *tx_frame);
 
 uint8_t CalcScoutCANChecksum(uint16_t id, uint8_t *data, uint8_t dlc);
 

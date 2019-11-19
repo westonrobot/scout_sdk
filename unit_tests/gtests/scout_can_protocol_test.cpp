@@ -157,16 +157,16 @@ struct ScoutCANProtocolTest : testing::Test
 TEST_F(ScoutCANProtocolTest, MotionStatusMsg)
 {
     ScoutState state;
-    ScoutStatusMessage msg;
-    DecodeScoutStatusMsgFromCAN(&motion_status_frame, &msg);
+    ScoutMessage msg;
+    DecodeScoutMsgFromCAN(&motion_status_frame, &msg);
     ScoutBase::UpdateScoutState(msg, state);
 
     ASSERT_FLOAT_EQ(state.linear_velocity, 1.256);
     ASSERT_FLOAT_EQ(state.angular_velocity, 0.123);
 
     ScoutState state2;
-    ScoutStatusMessage msg2;
-    DecodeScoutStatusMsgFromCAN(&motion_status_frame2, &msg2);
+    ScoutMessage msg2;
+    DecodeScoutMsgFromCAN(&motion_status_frame2, &msg2);
     ScoutBase::UpdateScoutState(msg2, state2);
 
     ASSERT_FLOAT_EQ(state2.linear_velocity, -1.256);
@@ -176,8 +176,8 @@ TEST_F(ScoutCANProtocolTest, MotionStatusMsg)
 TEST_F(ScoutCANProtocolTest, LightStatusMsg)
 {
     ScoutState state;
-    ScoutStatusMessage msg;
-    DecodeScoutStatusMsgFromCAN(&light_status_frame, &msg);
+    ScoutMessage msg;
+    DecodeScoutMsgFromCAN(&light_status_frame, &msg);
     ScoutBase::UpdateScoutState(msg, state);
 
     ASSERT_EQ(state.light_control_enabled, true);
@@ -190,8 +190,8 @@ TEST_F(ScoutCANProtocolTest, LightStatusMsg)
 TEST_F(ScoutCANProtocolTest, SystemStatusMsg)
 {
     ScoutState state;
-    ScoutStatusMessage msg;
-    DecodeScoutStatusMsgFromCAN(&system_status_frame, &msg);
+    ScoutMessage msg;
+    DecodeScoutMsgFromCAN(&system_status_frame, &msg);
     ScoutBase::UpdateScoutState(msg, state);
 
     ASSERT_EQ(state.base_state, true);
@@ -203,11 +203,11 @@ TEST_F(ScoutCANProtocolTest, SystemStatusMsg)
 TEST_F(ScoutCANProtocolTest, MotorDriverStatusMsg)
 {
     ScoutState state;
-    ScoutStatusMessage msg1, msg2, msg3, msg4;
-    DecodeScoutStatusMsgFromCAN(&motor1_driver_status_frame, &msg1);
-    DecodeScoutStatusMsgFromCAN(&motor2_driver_status_frame, &msg2);
-    DecodeScoutStatusMsgFromCAN(&motor3_driver_status_frame, &msg3);
-    DecodeScoutStatusMsgFromCAN(&motor4_driver_status_frame, &msg4);
+    ScoutMessage msg1, msg2, msg3, msg4;
+    DecodeScoutMsgFromCAN(&motor1_driver_status_frame, &msg1);
+    DecodeScoutMsgFromCAN(&motor2_driver_status_frame, &msg2);
+    DecodeScoutMsgFromCAN(&motor3_driver_status_frame, &msg3);
+    DecodeScoutMsgFromCAN(&motor4_driver_status_frame, &msg4);
     ScoutBase::UpdateScoutState(msg1, state);
     ScoutBase::UpdateScoutState(msg2, state);
     ScoutBase::UpdateScoutState(msg3, state);
