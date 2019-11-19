@@ -13,12 +13,10 @@ Refer to "src/apps/scout_demo" for an example.
 ## Package Structure
 
 * apps: demo to illustrate how to use the SDK, scout_monitor is a TUI application to monitor states of Scout
-* comm/async_io: manages raw data communication with robot
-* comm/scout_protocol: encoding and decoding of Scout UART/CAN protocols
-* scout_base: interface to send command to robot and receive robot state
-* third_party
-    - asio: asynchronous IO management (serial and CAN)
-    - googletest: for unit tests only (not required otherwise)
+* async_io: manages raw data communication with robot
+* scout_sdk/scout_protocol: encoding and decoding of Scout UART/CAN protocols
+* scout_sdk/scout_base: interface to send command to robot and receive robot state
+* unit_tests: for unit tests only (not required otherwise)
 
 ## Setup CAN-To-USB adapter 
  
