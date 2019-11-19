@@ -1,6 +1,8 @@
 # Dependency libraries
 #find_package(LIBRARY_NAME REQUIRED)
 
+add_subdirectory(googletest)
+
 ## Unit tests with GoogleTest
 set(GTEST_SRC
     gtests/scout_can_protocol_test.cpp

@@ -1,6 +1,8 @@
 # Dependency libraries
 # find_package(LIB_NAME REQUIRED)
 
+add_subdirectory(asio)
+
 # Add libraries
 set(ASYNC_IO_LIB_SRC
     src/async_serial.cpp

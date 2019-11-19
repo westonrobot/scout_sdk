@@ -84,7 +84,7 @@ extern "C" {
 #define FAULT_MOTOR_DRV_OVERHEAT_W      ((uint16_t)0x0200)
 #define FAULT_MOTOR_OVERCURRENT_W       ((uint16_t)0x0400)
 #define FAULT_BAT_UNDER_VOL_W           ((uint16_t)0x0800)
-#define FAULT_HIGH_BYTE_RESERVED1       ((uint16_t)0x1000)
+#define FAULT_RC_SIGNAL_LOSS            ((uint16_t)0x1000)
 #define FAULT_HIGH_BYTE_RESERVED2       ((uint16_t)0x2000)
 #define FAULT_HIGH_BYTE_RESERVED3       ((uint16_t)0x4000)
 #define FAULT_HIGH_BYTE_RESERVED4       ((uint16_t)0x8000)
@@ -240,39 +240,31 @@ typedef struct
 // For convenience to access status/control message
 typedef enum
 {
-    ScoutStatusNone = 0x00,
+    ScoutMsgNone = 0x00,
+    // status messages
     ScoutMotionStatusMsg = 0x01,
     ScoutLightStatusMsg = 0x02,
     ScoutSystemStatusMsg = 0x03,
-    ScoutMotorDriverStatusMsg = 0x04
-} ScoutStatusMsgType;
-
-typedef struct 
-{
-    ScoutStatusMsgType msg_type;
-
-    // only one of the following fields is updated, as specified by msg_type
-    MotionStatusMessage motion_status_msg;
-    LightStatusMessage light_status_msg;
-    SystemStatusMessage system_status_msg;
-    MotorDriverStatusMessage motor_driver_status_msg;
-} ScoutStatusMessage;
-
-typedef enum
-{
-    ScoutControlNone = 0x20,
+    ScoutMotorDriverStatusMsg = 0x04,
+    // control messages
     ScoutMotionControlMsg = 0x21,
     ScoutLightControlMsg = 0x22
-} ScoutControlMsgType;
+} ScoutMsgType;
 
 typedef struct 
 {
-    ScoutControlMsgType msg_type;
-
-    // only one of the following fields is updated, as specified by msg_type
-    MotionControlMessage motion_control_msg;
-    LightControlMessage light_control_msg;
-} ScoutControlMessage;
+    ScoutMsgType type;
+    union {
+        // status messages
+        MotionStatusMessage motion_status_msg;
+        LightStatusMessage light_status_msg;
+        SystemStatusMessage system_status_msg;
+        MotorDriverStatusMessage motor_driver_status_msg;
+        // control messages
+        MotionControlMessage motion_control_msg;
+        LightControlMessage light_control_msg;
+    } body;
+} ScoutMessage;
 
 #pragma pack(pop)
 
