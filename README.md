@@ -88,10 +88,10 @@ $ make
             device interrupt 43
     ```
     
-    If you use your own CAN-to-USB adapter, make sure it supports slcan or can be brought up as a native CAN device (for example, CANable https://www.canable.io/). Some adapters may use a custom-defined protocol and appear as a serial device in Linux. In such a case, you will have to translate the byte stream between CAN and UART by yourself. It would be difficult for us to provide support for them since not all manufacturers define this protocol in the same way.
+    If you use your own CAN-to-USB adapter, make sure it supports slcan or can be brought up as a native CAN device. Some adapters may use a custom-defined protocol and appear as a serial device in Linux. In such a case, you will have to translate the byte stream between CAN and UART by yourself. It would be difficult for us to provide support for them since not all manufacturers define this protocol in the same way.
 
 <!-- 
-2. Release v0.1 of this SDK provided a serial interface to talk with the robot. Front/rear light on the robot cannot be controlled and only a small subset of all robot states can be acquired through that interface. Full support of the serial interface is still under development and requires additional work on both the SDK and firmware sides.
+1. Release v0.1 of this SDK provided a serial interface to talk with the robot. Front/rear light on the robot cannot be controlled and only a small subset of all robot states can be acquired through that interface. Full support of the serial interface is still under development and requires additional work on both the SDK and firmware sides.
 -->
 
 ## Reference
