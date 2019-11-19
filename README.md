@@ -22,8 +22,6 @@ Refer to "src/apps/scout_demo" for an example.
 
 ## Setup CAN-To-USB adapter 
  
-The instructions work for stm32f0-based adapter with [candleLight](https://github.com/HubertD/candleLight_fw) firmware on a host computer running Linux. (Refer to limitations listed at the bottom for more details.)
-
 1. Enable gs_usb kernel module
     ```
     $ sudo modprobe gs_usb
