@@ -80,7 +80,7 @@ $ cmake ..
 $ make
 ```
 
-## Run demo code
+## Run Demo Apps
 
 The demo code expects one parameter for the CAN bus mode.
 
