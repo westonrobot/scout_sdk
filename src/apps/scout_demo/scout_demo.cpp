@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        std::cout << "Usage: app_scout_monitor <interface>" << std::endl
+        std::cout << "Usage: app_scout_demo <interface>" << std::endl
                   << "Example 1: ./app_scout_demo can0" << std::endl
                   << "Example 2: ./app_scout_demo /dev/ttyUSB0 115200" << std::endl;
         return -1;

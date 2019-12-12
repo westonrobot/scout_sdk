@@ -80,6 +80,32 @@ $ cmake ..
 $ make
 ```
 
+## Run demo code
+
+The demo code expects one parameter for the CAN bus mode.
+
+```
+$ ./app_scout_demo can0
+```
+
+Both the port name and baud rate need to be provided when using the RS232 interface.
+
+```
+$./app_scout_demo /dev/ttyUSB0 115200
+```
+
+If you've installed "libncurses5-dev" and built "app_scout_monitor", you can run it in a similar way:
+
+```
+$ ./app_scout_monitor can0
+```
+
+or
+
+```
+$./app_scout_monitor /dev/ttyUSB0 115200
+```
+
 ## Known Limitations
 
 <!-- 
