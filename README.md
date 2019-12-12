@@ -46,6 +46,16 @@ Refer to "src/apps/scout_demo" for an example.
 
 Two scripts inside the "./scripts" folder are provided for easy setup. You can run "./setup_can2usb.bash" for the first-time setup and run "./bringup_can2usb.bash" to bring up the device each time you unplug and re-plug the adapter.
 
+### Setup UART
+
+Generally your UART2USB cable should be automatically recognized as "/dev/ttyUSB0" or something similar and ready for use. If you get the error "... permission denied ..." when trying to open the port, you need to grant access of the port to your user accout:
+
+```
+$ sudo usermod -a -G dialout $USER
+```
+
+You need to re-login to get the change to take effect.
+
 ## Build SDK
 
 Install compile tools
@@ -72,6 +82,7 @@ $ make
 
 ## Known Limitations
 
+<!-- 
 1. The CAN interface requires the hardware to appear as a CAN device in the system. You can use the command "ifconfig" to check the interface status. For example, you may see something like
 
     ```
@@ -86,7 +97,6 @@ $ make
     
     If you use your own CAN-to-USB adapter, make sure it supports slcan or can be brought up as a native CAN device. Some adapters may use a custom-defined protocol and appear as a serial device in Linux. In such a case, you will have to translate the byte stream between CAN and UART by yourself. It would be difficult for us to provide support for them since not all manufacturers define this protocol in the same way.
 
-<!-- 
 1. Release v0.1 of this SDK provided a serial interface to talk with the robot. Front/rear light on the robot cannot be controlled and only a small subset of all robot states can be acquired through that interface. Full support of the serial interface is still under development and requires additional work on both the SDK and firmware sides.
 -->
 
